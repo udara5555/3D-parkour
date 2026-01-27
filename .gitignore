@@ -1,0 +1,37 @@
+# Unity folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]serSettings/
+
+# Visual Studio / Rider
+.vs/
+*.csproj
+*.sln
+*.user
+*.userprefs
+*.pidb
+*.booproj
+
+# Unity cache
+*.unityproj
+*.suo
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# WebGL build output
+Build/
+Builds/
+
+# Addressables
+ServerData/
+
+# Crash reports
+sysinfo.txt
