@@ -1,33 +1,51 @@
 using UnityEngine;
 
-public class PlayerMove : MonoBehaviour
+public class PlayerMovement : MonoBehaviour
 {
     public float speed = 5f;
-    public float jumpForce = 6f;
+
+    float yVelocity;
+    public float gravity = -9.8f;
+
+    
+
+
     CharacterController cc;
-    Vector3 velocity;
+    Animator anim;
 
     void Start()
     {
         cc = GetComponent<CharacterController>();
+        anim = GetComponent<Animator>();
     }
 
     void Update()
     {
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        float h = Input.GetAxis("Horizontal"); // A/D
+        float v = Input.GetAxis("Vertical");   // W/S
 
-        Vector3 move = transform.right * h + transform.forward * v;
+        // Rotate left / right
+        transform.Rotate(Vector3.up * h * 180f * Time.deltaTime);
+
+        // Move forward / backward
+        Vector3 move = transform.forward * v;
         cc.Move(move * speed * Time.deltaTime);
 
-        if (cc.isGrounded)
-        {
-            if (velocity.y < 0) velocity.y = -2f;
-            if (Input.GetKeyDown(KeyCode.Space))
-                velocity.y = jumpForce;
-        }
 
-        velocity.y += Physics.gravity.y * Time.deltaTime;
-        cc.Move(velocity * Time.deltaTime);
+        if (cc.isGrounded)
+            yVelocity = -2f;
+        else
+            yVelocity += gravity * Time.deltaTime;
+
+        cc.Move(Vector3.up * yVelocity * Time.deltaTime);
+
+        anim.SetBool("IsWalking", move.magnitude > 0.1f);
+
+        if (Input.GetKeyDown(KeyCode.C))
+            anim.SetBool("Sit", true);
+
+        if (Input.GetKeyUp(KeyCode.C))
+            anim.SetBool("Sit", false);
     }
+
 }
