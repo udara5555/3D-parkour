@@ -56,6 +56,6 @@ public class CharacterSwitcher : MonoBehaviour
         ActiveAnimator = activeObj ? activeObj.GetComponentInChildren<Animator>(true) : null;
 
         ClosePanel();
-        GetComponent<PlayerMovement>()?.RefreshAnimator();
+        //GetComponent<PlayerMovement>()?.RefreshAnimator();
     }
 }

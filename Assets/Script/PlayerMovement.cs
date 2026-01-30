@@ -4,10 +4,10 @@ public class PlayerMovement : MonoBehaviour
 {
     public float speed = 5f;
     public float gravity = -9.8f;
-
     public float mouseSensitivity = 2f;
-    float yaw;
+
     float yVelocity;
+    float yaw;
 
     CharacterController cc;
     Animator anim;
@@ -32,14 +32,36 @@ public class PlayerMovement : MonoBehaviour
         if (anim == null || !anim.gameObject.activeInHierarchy)
             anim = GetComponentInChildren<Animator>(true);
 
-        // mouse rotate
+        // mouse yaw (camera direction)
         yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
-        transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        Quaternion yawRot = Quaternion.Euler(0f, yaw, 0f);
 
-        // move forward/back
-        float v = Input.GetAxis("Vertical");   // W/S
-        Vector3 move = transform.forward * v;
+        // input
+        float h = Input.GetAxisRaw("Horizontal"); // A/D
+        float v = Input.GetAxisRaw("Vertical");   // W/S
+
+        // movement relative to mouse direction
+        Vector3 input = new Vector3(h, 0f, v);
+        Vector3 move = yawRot * input;
+
+        if (move.sqrMagnitude > 1f) move.Normalize();
+
         cc.Move(move * speed * Time.deltaTime);
+
+        // face movement direction
+        Quaternion targetRot;
+
+        if (move.sqrMagnitude > 0.0001f)
+            targetRot = Quaternion.LookRotation(move);
+        else
+            targetRot = yawRot;
+
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRot,
+            Time.deltaTime * 6f   // lower = more delay (try 4–8)
+        );
+
 
         // gravity
         if (cc.isGrounded) yVelocity = -2f;
@@ -48,17 +70,7 @@ public class PlayerMovement : MonoBehaviour
         cc.Move(Vector3.up * yVelocity * Time.deltaTime);
 
         // animations
-        anim.SetBool("IsWalking", Mathf.Abs(v) > 0.1f);
-
-        if (Input.GetKeyDown(KeyCode.C))
-            anim.SetBool("Sit", true);
-
-        if (Input.GetKeyUp(KeyCode.C))
-            anim.SetBool("Sit", false);
-    }
-
-    public void RefreshAnimator()
-    {
-        anim = GetComponentInChildren<Animator>(true);
+        anim.SetBool("IsWalking", move.sqrMagnitude > 0.0001f);
+        anim.SetBool("Sit", Input.GetKey(KeyCode.C));
     }
 }
