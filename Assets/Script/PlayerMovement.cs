@@ -3,43 +3,52 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public float speed = 5f;
-
-    float yVelocity;
     public float gravity = -9.8f;
 
-    
-
+    public float mouseSensitivity = 2f;
+    float yaw;
+    float yVelocity;
 
     CharacterController cc;
     Animator anim;
+    CharacterSwitcher switcher;
 
     void Start()
     {
         cc = GetComponent<CharacterController>();
-        anim = GetComponent<Animator>();
+        switcher = GetComponent<CharacterSwitcher>();
+        anim = GetComponentInChildren<Animator>(true);
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void Update()
     {
-        float h = Input.GetAxis("Horizontal"); // A/D
+        // use active skin animator
+        if (switcher != null && switcher.ActiveAnimator != null)
+            anim = switcher.ActiveAnimator;
+
+        if (anim == null || !anim.gameObject.activeInHierarchy)
+            anim = GetComponentInChildren<Animator>(true);
+
+        // mouse rotate
+        yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+        transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+
+        // move forward/back
         float v = Input.GetAxis("Vertical");   // W/S
-
-        // Rotate left / right
-        transform.Rotate(Vector3.up * h * 180f * Time.deltaTime);
-
-        // Move forward / backward
         Vector3 move = transform.forward * v;
         cc.Move(move * speed * Time.deltaTime);
 
-
-        if (cc.isGrounded)
-            yVelocity = -2f;
-        else
-            yVelocity += gravity * Time.deltaTime;
+        // gravity
+        if (cc.isGrounded) yVelocity = -2f;
+        else yVelocity += gravity * Time.deltaTime;
 
         cc.Move(Vector3.up * yVelocity * Time.deltaTime);
 
-        anim.SetBool("IsWalking", move.magnitude > 0.1f);
+        // animations
+        anim.SetBool("IsWalking", Mathf.Abs(v) > 0.1f);
 
         if (Input.GetKeyDown(KeyCode.C))
             anim.SetBool("Sit", true);
@@ -48,4 +57,8 @@ public class PlayerMovement : MonoBehaviour
             anim.SetBool("Sit", false);
     }
 
+    public void RefreshAnimator()
+    {
+        anim = GetComponentInChildren<Animator>(true);
+    }
 }
