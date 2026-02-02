@@ -1,4 +1,6 @@
-# Unity folders
+####################################
+# UNITY
+####################################
 [Ll]ibrary/
 [Tt]emp/
 [Oo]bj/
@@ -7,31 +9,63 @@
 [Ll]ogs/
 [Uu]serSettings/
 
-# Visual Studio / Rider
-.vs/
+# Unity generated files
 *.csproj
 *.sln
 *.user
 *.userprefs
 *.pidb
 *.booproj
-
-# Unity cache
 *.unityproj
 *.suo
+
+# Unity cache
 *.tmp
 *.log
 
-# OS files
+# Addressables
+ServerData/
+AddressableAssetsData/*/UnityEditor.Build.Pipeline/
+
+####################################
+# VISUAL STUDIO / RIDER / VS CODE
+####################################
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+####################################
+# OS FILES
+####################################
 .DS_Store
 Thumbs.db
 
-# WebGL build output
-Build/
-Builds/
+####################################
+# NODE / COLYSEUS SERVER
+####################################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Addressables
-ServerData/
+# Build outputs
+build/
+dist/
 
-# Crash reports
+# Environment variables
+.env
+.env.*
+
+####################################
+# COLYSEUS / LOADTEST
+####################################
+loadtest/results/
+
+####################################
+# MISC
+####################################
+*.bak
+*.pid
 sysinfo.txt
