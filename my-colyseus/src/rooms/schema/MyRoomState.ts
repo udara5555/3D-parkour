@@ -5,7 +5,8 @@ export class Player extends Schema {
   @type("number") y = 0;
   @type("number") z = 0;
   @type("number") rotY = 0;
-  @type("string") anim = "idle"; // ADD THIS
+  @type("string") anim = "idle"; // "idle" | "walk" | "sit"
+
 }
 
 export class MyState extends Schema {

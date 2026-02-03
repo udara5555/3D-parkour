@@ -60,15 +60,21 @@ public class ColyseusManager : MonoBehaviour
             var rd = remotes[sessionId];
             rd.targetPos = new Vector3(p.x, p.y, p.z);
             rd.targetRot = Quaternion.Euler(0f, p.rotY, 0f);
+
+            // ADD THIS PART
+            Animator a = rd.go.GetComponentInChildren<Animator>(true);
+            if (a != null)
+            {
+                a.SetBool("IsWalking", p.anim == "walk");
+                a.SetBool("Sit", p.anim == "sit");
+            }
         });
 
         // REMOVE players that left
         var toRemove = new List<string>();
         foreach (var id in remotes.Keys)
-        {
             if (!state.players.ContainsKey(id))
                 toRemove.Add(id);
-        }
 
         foreach (var id in toRemove)
         {
@@ -76,6 +82,7 @@ public class ColyseusManager : MonoBehaviour
             remotes.Remove(id);
         }
     }
+
 
     void LateUpdate()
     {
@@ -107,12 +114,25 @@ public class ColyseusManager : MonoBehaviour
         Vector3 pos = localPlayer.position;
         float rotY = localPlayer.eulerAngles.y;
 
+        // animation state
+        bool isWalking =
+            Input.GetAxisRaw("Horizontal") != 0 ||
+            Input.GetAxisRaw("Vertical") != 0;
+
+        bool isSitting = Input.GetKey(KeyCode.C);
+
+        string animState =
+            isSitting ? "sit" :
+            isWalking ? "walk" : "idle";
+
         room.Send("move", new Dictionary<string, object>
-        {
-            { "x", pos.x },
-            { "y", pos.y },
-            { "z", pos.z },
-            { "rotY", rotY }
-        });
+    {
+        { "x", pos.x },
+        { "y", pos.y },
+        { "z", pos.z },
+        { "rotY", rotY },
+        { "anim", animState }   // ADD THIS
+    });
     }
+
 }
