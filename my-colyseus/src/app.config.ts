@@ -12,6 +12,8 @@ import {
  */
 import { MyRoom } from "./rooms/MyRoom.js";
 
+console.log("Rooms registered: my_room");
+
 const server = defineServer({
     /**
      * Define your room handlers:
@@ -38,6 +40,13 @@ const server = defineServer({
      * Read more: https://expressjs.com/en/starter/basic-routing.html
      */
     express: (app) => {
+
+
+
+        process.on("uncaughtException", (e) => console.error("UNCAUGHT:", e));
+        process.on("unhandledRejection", (e) => console.error("REJECTION:", e));
+
+
         app.get("/hi", (req, res) => {
             res.send("It's time to kick ass and chew bubblegum!");
         });

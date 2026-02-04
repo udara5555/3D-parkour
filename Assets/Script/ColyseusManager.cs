@@ -6,11 +6,11 @@ using Colyseus.Schema;
 public class ColyseusManager : MonoBehaviour
 {
     [Header("Server")]
-    public string serverUrl = "ws://localhost:2567";
+    public string serverUrl = "http://127.0.0.1:2567";
     public string roomName = "my_room";
 
     [Header("Scene refs")]
-    public Transform localPlayer;              // drag your Player transform
+    public Transform localPlayer;              
     public GameObject remotePlayerPrefab;      // prefab for other players
 
     [Header("Send rate")]
@@ -25,6 +25,9 @@ public class ColyseusManager : MonoBehaviour
 
     private float sendTimer;
 
+    //bool connected = false;
+    static bool joining;
+
     private class RemoteData
     {
         public GameObject go;
@@ -37,15 +40,24 @@ public class ColyseusManager : MonoBehaviour
 
     async void Start()
     {
-        client = new ColyseusClient(serverUrl);
-        room = await client.JoinOrCreate<MyState>(roomName);
+        if (joining) return;
+        joining = true;
 
-        Debug.Log("Connected. SessionId: " + room.SessionId);
-
-        room.OnStateChange += (state, first) =>
+        try
         {
-            SyncRemotes(state);
-        };
+            client = new ColyseusClient(serverUrl);
+            room = await client.JoinOrCreate<MyState>(roomName);
+            Debug.Log("Connected: " + room.SessionId);
+            room.OnStateChange += (state, first) => SyncRemotes(state);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Join failed: " + e);
+        }
+        finally
+        {
+            joining = false;
+        }
     }
 
     void Update()
