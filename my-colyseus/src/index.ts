@@ -12,13 +12,5 @@ import { listen } from "@colyseus/tools";
 // Import Colyseus config
 import app from "./app.config.js";
 
-import { MyRoom } from "./rooms/MyRoom.js";
-import { Server } from "@colyseus/core"; // Import the Server class
-
-const gameServer = new Server(); // Create an instance of the Server
-
-gameServer.define("my_room", MyRoom);
-
-
 // Create and listen on 2567 (or PORT environment variable.)
 listen(app);

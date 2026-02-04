@@ -1,20 +1,21 @@
-import { Room, Client } from "@colyseus/core";
+import { Room, Client } from "colyseus";
 import { MyState, Player } from "./schema/MyRoomState.js";
 
-export class MyRoom extends Room<{ state: MyState }> {
 
-  onCreate() {
+export class MyRoom extends Room<{ state: MyState }> {
+  onCreate(options: any) {
     this.setState(new MyState());
 
-    this.onMessage("move", (client, data: { x:number; y:number; z:number; rotY:number; anim:string }) => {
-  const p = this.state.players.get(client.sessionId);
-  if (!p) return;
+    this.onMessage("move", (client: Client, data: any) => {
+      const p = this.state.players.get(client.sessionId);
+      if (!p) return;
 
-  p.x = data.x; p.y = data.y; p.z = data.z;
-  p.rotY = data.rotY;
-  p.anim = data.anim;
-});
-
+      p.x = data.x;
+      p.y = data.y;
+      p.z = data.z;
+      p.rotY = data.rotY;
+      p.anim = data.anim ?? "idle";
+    });
   }
 
   onJoin(client: Client) {
