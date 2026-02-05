@@ -23,10 +23,20 @@ export class MyRoom extends Room {
   }
 
   onJoin(client: Client) {
-    this.s.players.set(client.sessionId, new Player());
+    console.log("JOIN:", client.sessionId);
+    const p = new Player();
+    p.x = Math.random() * 4;
+    p.z = Math.random() * 4;
+    this.s.players.set(client.sessionId, p);
   }
 
+  onAuth(client: Client, options: any) {
+  console.log("AUTH:", client.sessionId);
+  return true;
+}
+
   onLeave(client: Client) {
+    console.log("LEAVE:", client.sessionId);
     this.s.players.delete(client.sessionId);
   }
 }

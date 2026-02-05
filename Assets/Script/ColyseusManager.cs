@@ -6,7 +6,7 @@ using Colyseus.Schema;
 public class ColyseusManager : MonoBehaviour
 {
     [Header("Server")]
-    public string serverUrl = "http://127.0.0.1:2567";
+    public string serverUrl = "ws://localhost:2567";
     public string roomName = "my_room";
 
     [Header("Scene refs")]
@@ -40,6 +40,8 @@ public class ColyseusManager : MonoBehaviour
 
     async void Start()
     {
+        Debug.Log("ColyseusManager Start()");
+
         if (joining) return;
         joining = true;
 
