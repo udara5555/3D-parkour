@@ -6,6 +6,12 @@ public class ThirdPersonCamera : MonoBehaviour
     public Vector3 offset = new Vector3(0, 2f, -4f);
     public float smooth = 10f;
 
+    void Start()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
     void LateUpdate()
     {
         if (!target) return;
