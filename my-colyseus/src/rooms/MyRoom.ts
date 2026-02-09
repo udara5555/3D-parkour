@@ -1,6 +1,9 @@
 import { Room, Client } from "colyseus";
 import { MyState, Player } from "./schema/MyRoomState.js";
 
+
+
+
 export class MyRoom extends Room {
   private get s(): MyState {
     return this.state as MyState;
@@ -11,6 +14,9 @@ export class MyRoom extends Room {
     console.log("ROOM CREATED:", this.roomId);
 
     this.onMessage("move", (client: Client, data: any) => {
+
+      //~console.log("MOVE", client.sessionId, data);
+
       const p = this.s.players.get(client.sessionId);
       if (!p) return;
 

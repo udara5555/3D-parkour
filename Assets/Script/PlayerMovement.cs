@@ -13,14 +13,21 @@ public class PlayerMovement : MonoBehaviour
     Animator anim;
     CharacterSwitcher switcher;
 
+    ColyseusManager net;
+    float sendTimer;
+
+
     void Start()
     {
         cc = GetComponent<CharacterController>();
         switcher = GetComponent<CharacterSwitcher>();
         anim = GetComponentInChildren<Animator>(true);
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        net = FindAnyObjectByType<ColyseusManager>();
+
+
+        //Cursor.lockState = CursorLockMode.Locked;
+        //Cursor.visible = false;
     }
 
     void Update()
@@ -72,5 +79,18 @@ public class PlayerMovement : MonoBehaviour
         // animations
         anim.SetBool("IsWalking", move.sqrMagnitude > 0.0001f);
         anim.SetBool("Sit", Input.GetKey(KeyCode.C));
+
+        if (net != null && net.IsInRoom)   // if you don’t have IsInRoom, use: net.room != null
+        {
+            sendTimer += Time.deltaTime;
+            if (sendTimer >= 0.05f)
+            {
+                sendTimer = 0f;
+
+                string a = (move.sqrMagnitude > 0.0001f) ? "run" : "idle";
+                net.SendMove(transform.position, transform.eulerAngles.y, a);
+            }
+        }
+
     }
 }

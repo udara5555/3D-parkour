@@ -27,6 +27,9 @@ public class ColyseusManager : MonoBehaviour
     private Room<MyState> room;
     private float sendTimer;
 
+    public bool IsInRoom => room != null;
+
+
     class RemoteData
     {
         public GameObject go;
@@ -89,6 +92,18 @@ public class ColyseusManager : MonoBehaviour
             if (sessionId == room.SessionId) return;
 
             var go = Instantiate(remotePlayerPrefab);
+
+            // set initial position from state
+            go.transform.position = new Vector3(player.x, player.y, player.z);
+            go.transform.rotation = Quaternion.Euler(0f, player.rotY, 0f);
+
+            // IMPORTANT: disable local-control scripts on remote clones
+            var pm = go.GetComponent<PlayerMovement>();
+            if (pm) pm.enabled = false;
+
+            var cc = go.GetComponent<CharacterController>();
+            if (cc) cc.enabled = false;
+
             remotes[sessionId] = new RemoteData
             {
                 go = go,
@@ -96,6 +111,10 @@ public class ColyseusManager : MonoBehaviour
                 targetRot = go.transform.rotation,
                 anim = go.GetComponentInChildren<Animator>(true)
             };
+
+            
+
+
         });
 
         cb.OnRemove(state => state.players, (sessionId, player) =>
@@ -104,18 +123,36 @@ public class ColyseusManager : MonoBehaviour
             remotes.Remove(sessionId);
         });
 
-        cb.OnChange(state => state.players, (sessionId, player) =>
+        cb.OnAdd(state => state.players, (sessionId, player) =>
         {
-            if (!remotes.TryGetValue(sessionId, out var rd)) return;
-            rd.targetPos = new Vector3(player.x, player.y, player.z);
-            rd.targetRot = Quaternion.Euler(0f, player.rotY, 0f);
+            if (sessionId == room.SessionId) return;
 
-            if (rd.anim != null)
+            var go = Instantiate(remotePlayerPrefab);
+            go.transform.position = new Vector3(player.x, player.y, player.z);
+            go.transform.rotation = Quaternion.Euler(0f, player.rotY, 0f);
+
+            var pm = go.GetComponent<PlayerMovement>(); if (pm) pm.enabled = false;
+            var cc = go.GetComponent<CharacterController>(); if (cc) cc.enabled = false;
+
+            var rd = new RemoteData
             {
-                rd.anim.SetBool("IsWalking", player.anim == "walk");
-                rd.anim.SetBool("Sit", player.anim == "sit");
-            }
+                go = go,
+                targetPos = go.transform.position,
+                targetRot = go.transform.rotation,
+                anim = go.GetComponentInChildren<Animator>(true)
+            };
+            remotes[sessionId] = rd;
+
+            cb.OnChange(player, () =>
+            {
+                if (!remotes.TryGetValue(sessionId, out var rd)) return;
+
+                rd.targetPos = new Vector3(player.x, player.y, player.z);
+                rd.targetRot = Quaternion.Euler(0f, player.rotY, 0f);
+            });
+
         });
+
     }
 
     void Update()
@@ -137,6 +174,14 @@ public class ColyseusManager : MonoBehaviour
             { "x", pos.x }, { "y", pos.y }, { "z", pos.z },
             { "rotY", rotY }, { "anim", animState }
         });
+
+        foreach (var kv in remotes)
+        {
+            var r = kv.Value;
+            r.go.transform.position = Vector3.Lerp(r.go.transform.position, r.targetPos, Time.deltaTime * positionLerp);
+            r.go.transform.rotation = Quaternion.Slerp(r.go.transform.rotation, r.targetRot, Time.deltaTime * rotationSlerp);
+        }
+
     }
 
     void LateUpdate()
@@ -148,4 +193,23 @@ public class ColyseusManager : MonoBehaviour
             rd.go.transform.rotation = Quaternion.Slerp(rd.go.transform.rotation, rd.targetRot, Time.deltaTime * rotationSlerp);
         }
     }
+
+    public void SendMove(Vector3 pos, float rotY, string anim)
+    {
+        if (room == null) return;
+
+        Debug.Log("SEND MOVE");
+
+        room.Send("move", new
+        {
+            x = pos.x,
+            y = pos.y,
+            z = pos.z,
+            rotY = rotY,
+            anim = anim
+        });
+
+        
+    }
+
 }
