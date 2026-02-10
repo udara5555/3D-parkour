@@ -114,6 +114,13 @@ public class ColyseusManager : MonoBehaviour
                 if (!remotes.TryGetValue(sessionId, out var rd)) return;
                 rd.targetPos = new Vector3(player.x, player.y, player.z);
                 rd.targetRot = Quaternion.Euler(0f, player.rotY, 0f);
+
+                if (rd.anim != null)
+                {
+                    rd.anim.SetBool("IsWalking", player.anim == "walk");
+                    rd.anim.SetBool("Sit", player.anim == "sit");
+                }
+
             });
         });
 

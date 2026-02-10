@@ -87,8 +87,12 @@ public class PlayerMovement : MonoBehaviour
             {
                 sendTimer = 0f;
 
-                string a = (move.sqrMagnitude > 0.0001f) ? "run" : "idle";
-                net.SendMove(transform.position, transform.eulerAngles.y, a);
+                // Combine logic for animation state into a single variable
+                string action =
+                    Input.GetKey(KeyCode.C) ? "sit" :
+                    (move.sqrMagnitude > 0.0001f ? "walk" : "idle");
+
+                net.SendMove(transform.position, transform.eulerAngles.y, action);
             }
         }
 
