@@ -89,20 +89,16 @@ public class ColyseusManager : MonoBehaviour
 
         cb.OnAdd(state => state.players, (sessionId, player) =>
         {
+            // me
             if (sessionId == room.SessionId) return;
 
+            // spawn remote once
             var go = Instantiate(remotePlayerPrefab);
-
-            // set initial position from state
             go.transform.position = new Vector3(player.x, player.y, player.z);
             go.transform.rotation = Quaternion.Euler(0f, player.rotY, 0f);
 
-            // IMPORTANT: disable local-control scripts on remote clones
-            var pm = go.GetComponent<PlayerMovement>();
-            if (pm) pm.enabled = false;
-
-            var cc = go.GetComponent<CharacterController>();
-            if (cc) cc.enabled = false;
+            var pm = go.GetComponent<PlayerMovement>(); if (pm) pm.enabled = false;
+            var cc = go.GetComponent<CharacterController>(); if (cc) cc.enabled = false;
 
             remotes[sessionId] = new RemoteData
             {
@@ -112,9 +108,13 @@ public class ColyseusManager : MonoBehaviour
                 anim = go.GetComponentInChildren<Animator>(true)
             };
 
-            
-
-
+            //  THIS is what makes movement update
+            cb.OnChange(player, () =>
+            {
+                if (!remotes.TryGetValue(sessionId, out var rd)) return;
+                rd.targetPos = new Vector3(player.x, player.y, player.z);
+                rd.targetRot = Quaternion.Euler(0f, player.rotY, 0f);
+            });
         });
 
         cb.OnRemove(state => state.players, (sessionId, player) =>
@@ -122,38 +122,9 @@ public class ColyseusManager : MonoBehaviour
             if (remotes.TryGetValue(sessionId, out var rd) && rd.go) Destroy(rd.go);
             remotes.Remove(sessionId);
         });
-
-        cb.OnAdd(state => state.players, (sessionId, player) =>
-        {
-            if (sessionId == room.SessionId) return;
-
-            var go = Instantiate(remotePlayerPrefab);
-            go.transform.position = new Vector3(player.x, player.y, player.z);
-            go.transform.rotation = Quaternion.Euler(0f, player.rotY, 0f);
-
-            var pm = go.GetComponent<PlayerMovement>(); if (pm) pm.enabled = false;
-            var cc = go.GetComponent<CharacterController>(); if (cc) cc.enabled = false;
-
-            var rd = new RemoteData
-            {
-                go = go,
-                targetPos = go.transform.position,
-                targetRot = go.transform.rotation,
-                anim = go.GetComponentInChildren<Animator>(true)
-            };
-            remotes[sessionId] = rd;
-
-            cb.OnChange(player, () =>
-            {
-                if (!remotes.TryGetValue(sessionId, out var rd)) return;
-
-                rd.targetPos = new Vector3(player.x, player.y, player.z);
-                rd.targetRot = Quaternion.Euler(0f, player.rotY, 0f);
-            });
-
-        });
-
     }
+
+
 
     void Update()
     {
