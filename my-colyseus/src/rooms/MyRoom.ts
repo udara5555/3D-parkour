@@ -15,7 +15,7 @@ export class MyRoom extends Room {
 
     this.onMessage("move", (client: Client, data: any) => {
 
-      //~console.log("MOVE", client.sessionId, data);
+      //console.log("MOVE", client.sessionId, data);
 
       const p = this.s.players.get(client.sessionId);
       if (!p) return;
@@ -25,6 +25,14 @@ export class MyRoom extends Room {
       p.z = data.z ?? p.z;
       p.rotY = data.rotY ?? p.rotY;
       p.anim = data.anim ?? p.anim;
+
+      this.onMessage("skin", (client, data) => {
+        //console.log("SKIN", client.sessionId, data);
+        const p = this.s.players.get(client.sessionId);
+        if (!p) return;
+          p.skin = data.skin;
+      });
+
     });
   }
 
@@ -42,4 +50,6 @@ export class MyRoom extends Room {
     console.log("LEAVE:", client.sessionId);
     this.s.players.delete(client.sessionId);
   }
+
+  
 }

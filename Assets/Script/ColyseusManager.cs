@@ -108,6 +108,8 @@ public class ColyseusManager : MonoBehaviour
                 anim = go.GetComponentInChildren<Animator>(true)
             };
 
+            ApplySkin(go, (int)player.skin);
+
             //  THIS is what makes movement update
             cb.OnChange(player, () =>
             {
@@ -120,6 +122,10 @@ public class ColyseusManager : MonoBehaviour
                     rd.anim.SetBool("IsWalking", player.anim == "walk");
                     rd.anim.SetBool("Sit", player.anim == "sit");
                 }
+
+                ApplySkin(rd.go, (int)player.skin);
+
+
 
             });
         });
@@ -189,5 +195,36 @@ public class ColyseusManager : MonoBehaviour
 
         
     }
+
+    public void SendSkin(int skin)
+    {
+        if (room == null) return;
+        Debug.Log("SEND SKIN " + skin);
+        room.Send("skin", new { skin = skin });
+
+    }
+
+    void ApplySkin(GameObject go, int skinIndex)
+    {
+        // collect ONLY skins
+        var skins = new System.Collections.Generic.List<Transform>();
+
+        foreach (Transform t in go.transform)
+        {
+            if (t.name == "root" || t.name.StartsWith("character-"))
+                skins.Add(t);
+        }
+
+        if (skins.Count == 0) return;
+
+        skinIndex = Mathf.Clamp(skinIndex, 0, skins.Count - 1);
+
+        for (int i = 0; i < skins.Count; i++)
+            skins[i].gameObject.SetActive(i == skinIndex);
+    }
+
+
+
+
 
 }

@@ -4,7 +4,7 @@ public class CharacterSwitcher : MonoBehaviour
 {
     [Header("Characters")]
     public GameObject player;        // default (character-a / root)
-    public GameObject[] others;      // character-b ... r
+    public GameObject[] others;      // character-b to r
 
     [Header("UI")]
     public GameObject skinPanel;     // SkinPanel object
@@ -12,6 +12,8 @@ public class CharacterSwitcher : MonoBehaviour
     public Animator ActiveAnimator { get; private set; }  //ADD
 
     int currentIndex = 0;
+
+    public int CurrentSkin => currentIndex;
 
     void Start()
     {
@@ -55,7 +57,20 @@ public class CharacterSwitcher : MonoBehaviour
         GameObject activeObj = usePlayer ? player : others[currentIndex - 1];
         ActiveAnimator = activeObj ? activeObj.GetComponentInChildren<Animator>(true) : null;
 
+        var pm = GetComponent<PlayerMovement>();
+        if (pm != null && pm.enabled) // only local player
+        {
+            FindAnyObjectByType<ColyseusManager>()?.SendSkin(currentIndex);
+        }
+
+
+
         ClosePanel();
         //GetComponent<PlayerMovement>()?.RefreshAnimator();
+    }
+
+    public void SetSkin(int id)
+    {
+        SelectSkin(id);
     }
 }

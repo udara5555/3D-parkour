@@ -29,5 +29,8 @@ public Player() { }
 
 	[Type(4, "string")]
 	public string anim = default(string);
+
+	[Type(5, "number")]
+	public float skin = default(float);
 }
 
