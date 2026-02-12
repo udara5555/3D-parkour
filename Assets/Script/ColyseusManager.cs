@@ -123,7 +123,8 @@ public class ColyseusManager : MonoBehaviour
                     rd.anim.SetBool("Sit", player.anim == "sit");
                 }
 
-                ApplySkin(rd.go, (int)player.skin);
+                rd.anim = ApplySkin(rd.go, (int)player.skin);
+
 
 
 
@@ -204,9 +205,10 @@ public class ColyseusManager : MonoBehaviour
 
     }
 
-    void ApplySkin(GameObject go, int skinIndex)
+    Animator ApplySkin(GameObject go, int skinIndex)
     {
-        // collect ONLY skins
+        Animator activeAnim = null;
+
         var skins = new System.Collections.Generic.List<Transform>();
 
         foreach (Transform t in go.transform)
@@ -215,13 +217,22 @@ public class ColyseusManager : MonoBehaviour
                 skins.Add(t);
         }
 
-        if (skins.Count == 0) return;
+        if (skins.Count == 0) return null;
 
         skinIndex = Mathf.Clamp(skinIndex, 0, skins.Count - 1);
 
         for (int i = 0; i < skins.Count; i++)
-            skins[i].gameObject.SetActive(i == skinIndex);
+        {
+            bool active = (i == skinIndex);
+            skins[i].gameObject.SetActive(active);
+
+            if (active)
+                activeAnim = skins[i].GetComponentInChildren<Animator>(true);
+        }
+
+        return activeAnim;
     }
+
 
 
 
