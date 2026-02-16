@@ -29,6 +29,8 @@ public class ColyseusManager : MonoBehaviour
 
     public bool IsInRoom => room != null;
 
+    
+
 
     class RemoteData
     {
@@ -52,8 +54,16 @@ public class ColyseusManager : MonoBehaviour
         room = await client.Create<MyState>(roomName);
         Debug.Log("CREATED roomId: " + room.RoomId);
 
-        if (roomCodeText) roomCodeText.text = "Code: " + room.RoomId;
+        if (roomCodeText != null)
+            roomCodeText.text = "Room ID :" + room.RoomId;
+
+        //if (roomCodeText) roomCodeText.text = "Room ID : " + room.RoomId;
+        
         HookStateCallbacks();
+
+        //room = await client.Create<MyState>(roomName);
+
+        
     }
 
     // Button: Join With Code
