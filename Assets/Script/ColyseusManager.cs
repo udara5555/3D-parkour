@@ -222,12 +222,10 @@ public class ColyseusManager : MonoBehaviour
         var skins = new System.Collections.Generic.List<Transform>();
 
         foreach (Transform t in go.transform)
-        {
             if (t.name == "root" || t.name.StartsWith("character-"))
                 skins.Add(t);
-        }
 
-        if (skins.Count == 0) return null;
+        if (skins.Count == 0) return go.GetComponentInChildren<Animator>(true);
 
         skinIndex = Mathf.Clamp(skinIndex, 0, skins.Count - 1);
 
@@ -239,6 +237,10 @@ public class ColyseusManager : MonoBehaviour
             if (active)
                 activeAnim = skins[i].GetComponentInChildren<Animator>(true);
         }
+
+        // fallback for default skin where Animator is on top/root prefab
+        if (activeAnim == null)
+            activeAnim = go.GetComponentInChildren<Animator>(true);
 
         return activeAnim;
     }
