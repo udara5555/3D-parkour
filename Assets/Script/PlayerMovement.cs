@@ -16,6 +16,8 @@ public class PlayerMovement : MonoBehaviour
     ColyseusManager net;
     float sendTimer;
 
+    public Transform characterModel;
+
 
     void Start()
     {
@@ -34,7 +36,16 @@ public class PlayerMovement : MonoBehaviour
     {
         // use active skin animator
         if (switcher != null && switcher.ActiveAnimator != null)
+        {
             anim = switcher.ActiveAnimator;
+
+            // make sure characterModel points to the root of the active skin
+            if (switcher.CurrentSkin == 0)  // default player
+                characterModel = switcher.player.transform.GetChild(0); // root
+            else
+                characterModel = switcher.others[switcher.CurrentSkin - 1].transform.GetChild(0); // root
+        }
+            
 
         if (anim == null || !anim.gameObject.activeInHierarchy)
             anim = GetComponentInChildren<Animator>(true);
@@ -47,6 +58,8 @@ public class PlayerMovement : MonoBehaviour
         float h = Input.GetAxisRaw("Horizontal"); // A/D
         float v = Input.GetAxisRaw("Vertical");   // W/S
 
+
+
         // movement relative to mouse direction
         Vector3 input = new Vector3(h, 0f, v);
         Vector3 move = yawRot * input;
@@ -55,19 +68,23 @@ public class PlayerMovement : MonoBehaviour
 
         cc.Move(move * speed * Time.deltaTime);
 
+        // rotate animation only (not player)
+        Transform model = anim.transform.root;
+
+        Vector3 localInput = new Vector3(h, 0f, v);
+
+        if (localInput.sqrMagnitude > 0.01f)
+        {
+            Quaternion animRot = Quaternion.LookRotation(localInput);
+            characterModel.localRotation = Quaternion.Slerp(
+                characterModel.localRotation,
+                animRot,
+                Time.deltaTime * 10f
+            );
+        }
+
         // face movement direction
-        Quaternion targetRot;
-
-        if (move.sqrMagnitude > 0.0001f)
-            targetRot = Quaternion.LookRotation(move);
-        else
-            targetRot = yawRot;
-
-        transform.rotation = Quaternion.Slerp(
-            transform.rotation,
-            targetRot,
-            Time.deltaTime * 6f   // lower = more delay (try 4–8)
-        );
+        transform.rotation = Quaternion.Euler(0f, yaw, 0f); 
 
 
         // gravity

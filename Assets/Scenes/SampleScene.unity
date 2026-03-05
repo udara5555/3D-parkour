@@ -159,6 +159,7 @@ MonoBehaviour:
   speed: 5
   gravity: -9.8
   mouseSensitivity: 2
+  characterModel: {fileID: 4436805663581744702}
 --- !u!114 &1602781
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -751,7 +752,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ThirdPersonCamera
   target: {fileID: 1038148696}
   offset: {x: 2, y: 2, z: -5}
-  smooth: 100
+  smooth: 10
 --- !u!1001 &351292706
 PrefabInstance:
   m_ObjectHideFlags: 0

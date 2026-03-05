@@ -61,6 +61,7 @@ public class CharacterSwitcher : MonoBehaviour
         if (pm != null && pm.enabled) // only local player
         {
             FindAnyObjectByType<ColyseusManager>()?.SendSkin(currentIndex);
+
         }
 
 
