@@ -64,6 +64,8 @@ public class PlayerMovement : MonoBehaviour
         Vector3 input = new Vector3(h, 0f, v);
         Vector3 move = yawRot * input;
 
+        //transform.rotation = Quaternion.Euler(0f, characterModel.eulerAngles.y, 0f);
+
         if (move.sqrMagnitude > 1f) move.Normalize();
 
         cc.Move(move * speed * Time.deltaTime);
@@ -109,7 +111,7 @@ public class PlayerMovement : MonoBehaviour
                     Input.GetKey(KeyCode.C) ? "sit" :
                     (move.sqrMagnitude > 0.0001f ? "walk" : "idle");
 
-                net.SendMove(transform.position, transform.eulerAngles.y, action);
+                net.SendMove(transform.position, characterModel.rotation.eulerAngles.y, action);
             }
         }
 

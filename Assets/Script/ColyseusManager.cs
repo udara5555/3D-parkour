@@ -99,31 +99,31 @@ public class ColyseusManager : MonoBehaviour
 
         cb.OnAdd(state => state.players, (sessionId, player) =>
         {
-            // me
             if (sessionId == room.SessionId) return;
 
-            // spawn remote once
             var go = Instantiate(remotePlayerPrefab);
             go.transform.position = new Vector3(player.x, player.y, player.z);
-            go.transform.rotation = Quaternion.Euler(0f, player.rotY, 0f);
+            Transform visualRoot = go.transform.Find("root");
+            if (visualRoot != null)
+                visualRoot.rotation = Quaternion.Euler(0f, player.rotY, 0f);
 
             var pm = go.GetComponent<PlayerMovement>(); if (pm) pm.enabled = false;
             var cc = go.GetComponent<CharacterController>(); if (cc) cc.enabled = false;
+
+            var anim = ApplySkin(go, (int)player.skin);
 
             remotes[sessionId] = new RemoteData
             {
                 go = go,
                 targetPos = go.transform.position,
                 targetRot = go.transform.rotation,
-                anim = go.GetComponentInChildren<Animator>(true)
+                anim = anim
             };
 
-            ApplySkin(go, (int)player.skin);
-
-            //  THIS is what makes movement update
             cb.OnChange(player, () =>
             {
                 if (!remotes.TryGetValue(sessionId, out var rd)) return;
+
                 rd.targetPos = new Vector3(player.x, player.y, player.z);
                 rd.targetRot = Quaternion.Euler(0f, player.rotY, 0f);
 
@@ -134,16 +134,14 @@ public class ColyseusManager : MonoBehaviour
                 }
 
                 rd.anim = ApplySkin(rd.go, (int)player.skin);
-
-
-
-
             });
         });
 
         cb.OnRemove(state => state.players, (sessionId, player) =>
         {
-            if (remotes.TryGetValue(sessionId, out var rd) && rd.go) Destroy(rd.go);
+            if (remotes.TryGetValue(sessionId, out var rd) && rd.go)
+                Destroy(rd.go);
+
             remotes.Remove(sessionId);
         });
     }
@@ -159,7 +157,7 @@ public class ColyseusManager : MonoBehaviour
         sendTimer = 0f;
 
         Vector3 pos = localPlayer.position;
-        float rotY = localPlayer.eulerAngles.y;
+        float rotY = localPlayer.GetComponent<PlayerMovement>().characterModel.eulerAngles.y;
 
         bool isWalking = Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0;
         bool isSitting = Input.GetKey(KeyCode.C);
@@ -174,7 +172,34 @@ public class ColyseusManager : MonoBehaviour
         {
             var r = kv.Value;
             r.go.transform.position = Vector3.Lerp(r.go.transform.position, r.targetPos, Time.deltaTime * positionLerp);
-            r.go.transform.rotation = Quaternion.Slerp(r.go.transform.rotation, r.targetRot, Time.deltaTime * rotationSlerp);
+            Transform visualRoot = null;
+
+            // default skin
+            var r0 = r.go.transform.Find("root");
+            if (r0 != null && r0.gameObject.activeSelf)
+                visualRoot = r0;
+
+            // other skins
+            if (visualRoot == null)
+            {
+                foreach (Transform t in r.go.transform)
+                {
+                    if (t.name.StartsWith("character-") && t.gameObject.activeSelf)
+                    {
+                        visualRoot = t.Find("root");
+                        break;
+                    }
+                }
+            }
+
+            if (visualRoot != null)
+            {
+                visualRoot.rotation = Quaternion.Slerp(
+                    visualRoot.rotation,
+                    r.targetRot,
+                    Time.deltaTime * rotationSlerp
+                );
+            }
         }
 
     }
@@ -185,7 +210,7 @@ public class ColyseusManager : MonoBehaviour
         {
             if (!rd.go) continue;
             rd.go.transform.position = Vector3.Lerp(rd.go.transform.position, rd.targetPos, Time.deltaTime * positionLerp);
-            rd.go.transform.rotation = Quaternion.Slerp(rd.go.transform.rotation, rd.targetRot, Time.deltaTime * rotationSlerp);
+            //rd.go.transform.rotation = Quaternion.Slerp(rd.go.transform.rotation, rd.targetRot, Time.deltaTime * rotationSlerp);
         }
     }
 
