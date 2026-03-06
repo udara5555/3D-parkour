@@ -158,8 +158,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMove
   speed: 5
   gravity: -9.8
-  mouseSensitivity: 2
+  mouseSensitivity: 5
   characterModel: {fileID: 4436805663581744702}
+  jumpForce: 7
 --- !u!114 &1602781
 MonoBehaviour:
   m_ObjectHideFlags: 0

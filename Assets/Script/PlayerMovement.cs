@@ -18,6 +18,9 @@ public class PlayerMovement : MonoBehaviour
 
     public Transform characterModel;
 
+    public float jumpForce = 5f;
+    bool isJumping = false;
+
 
     void Start()
     {
@@ -58,6 +61,13 @@ public class PlayerMovement : MonoBehaviour
         float h = Input.GetAxisRaw("Horizontal"); // A/D
         float v = Input.GetAxisRaw("Vertical");   // W/S
 
+        // Jump input
+        if (cc.isGrounded && Input.GetKeyDown(KeyCode.Space))
+        {
+            yVelocity = jumpForce;
+            isJumping = true;
+        }
+
 
 
         // movement relative to mouse direction
@@ -86,18 +96,27 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // face movement direction
-        transform.rotation = Quaternion.Euler(0f, yaw, 0f); 
+        transform.rotation = Quaternion.Euler(0f, yaw, 0f);
 
 
         // gravity
-        if (cc.isGrounded) yVelocity = -2f;
-        else yVelocity += gravity * Time.deltaTime;
+        if (cc.isGrounded && !isJumping)
+            yVelocity = -2f;
+        else
+            yVelocity += gravity * Time.deltaTime;
 
         cc.Move(Vector3.up * yVelocity * Time.deltaTime);
+
+        if (cc.isGrounded)
+        {
+            isJumping = false;
+        }
 
         // animations
         anim.SetBool("IsWalking", move.sqrMagnitude > 0.0001f);
         anim.SetBool("Sit", Input.GetKey(KeyCode.C));
+        anim.SetBool("Jump", isJumping);
+
 
         if (net != null && net.IsInRoom)   // if you don’t have IsInRoom, use: net.room != null
         {
@@ -109,6 +128,7 @@ public class PlayerMovement : MonoBehaviour
                 // Combine logic for animation state into a single variable
                 string action =
                     Input.GetKey(KeyCode.C) ? "sit" :
+                    isJumping ? "jump" :
                     (move.sqrMagnitude > 0.0001f ? "walk" : "idle");
 
                 net.SendMove(transform.position, characterModel.rotation.eulerAngles.y, action);
