@@ -21,6 +21,9 @@ public class PlayerMovement : MonoBehaviour
     public float jumpForce = 5f;
     bool isJumping = false;
 
+    public FixedJoystick joystick;
+    public bool jumpPressed;
+    public bool sitPressed;
 
     void Start()
     {
@@ -58,15 +61,16 @@ public class PlayerMovement : MonoBehaviour
         Quaternion yawRot = Quaternion.Euler(0f, yaw, 0f);
 
         // input
-        float h = Input.GetAxisRaw("Horizontal"); // A/D
-        float v = Input.GetAxisRaw("Vertical");   // W/S
+        float h = Input.GetAxisRaw("Horizontal") + joystick.Horizontal; // A/D
+        float v = Input.GetAxisRaw("Vertical") + joystick.Vertical;   // W/S
 
         // Jump input
-        if (cc.isGrounded && Input.GetKeyDown(KeyCode.Space))
+        if (cc.isGrounded && (Input.GetKeyDown(KeyCode.Space) || jumpPressed))
         {
             yVelocity = jumpForce;
             isJumping = true;
         }
+        jumpPressed = false;
 
 
 
@@ -114,7 +118,7 @@ public class PlayerMovement : MonoBehaviour
 
         // animations
         anim.SetBool("IsWalking", move.sqrMagnitude > 0.0001f);
-        anim.SetBool("Sit", Input.GetKey(KeyCode.C));
+        anim.SetBool("Sit", Input.GetKey(KeyCode.C) || sitPressed);
         anim.SetBool("Jump", isJumping);
 
 
@@ -135,5 +139,20 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
+    }
+
+    public void OnJump()
+    {
+        jumpPressed = true;
+    }
+
+    public void OnSitDown()
+    {
+        sitPressed = true;
+    }
+
+    public void OnSitUp()
+    {
+        sitPressed = false;
     }
 }
