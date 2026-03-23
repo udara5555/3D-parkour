@@ -6070,7 +6070,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a69b41f60a7ecc4dbe8e92f2f1b857b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ColyseusManager
-  serverUrl: wss://threed-parkour-1.onrender.com/
+  serverUrl: ws://127.0.0.1:2567
   roomName: my_room
   roomCodeInput: {fileID: 871263450}
   roomCodeText: {fileID: 1649954644}

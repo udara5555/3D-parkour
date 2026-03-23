@@ -116,9 +116,13 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // animations
-        anim.SetBool("IsWalking", move.sqrMagnitude > 0.0001f);
-        anim.SetBool("Sit", Input.GetKey(KeyCode.C) || sitPressed);
-        anim.SetBool("Jump", isJumping);
+        bool isWalking = move.sqrMagnitude > 0.0001f && cc.isGrounded;
+        bool isSitting = Input.GetKey(KeyCode.C) || sitPressed;
+        bool isInAir = !cc.isGrounded; // treat falling as "in air" for network state
+
+        anim.SetBool("IsWalking", isWalking);
+        anim.SetBool("Sit", isSitting);
+        anim.SetBool("Jump", isInAir);
 
 
         if (net != null && net.IsInRoom)   // if you don’t have IsInRoom, use: net.room != null
@@ -130,9 +134,9 @@ public class PlayerMovement : MonoBehaviour
 
                 // Combine logic for animation state into a single variable
                 string action =
-                    Input.GetKey(KeyCode.C) ? "sit" :
-                    isJumping ? "jump" :
-                    (move.sqrMagnitude > 0.0001f ? "walk" : "idle");
+                    isSitting ? "sit" :
+                    isInAir ? "jump" :
+                    isWalking ? "walk" : "idle";
 
                 net.SendMove(transform.position, characterModel.rotation.eulerAngles.y, action);
             }

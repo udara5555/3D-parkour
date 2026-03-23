@@ -134,6 +134,7 @@ public class ColyseusManager : MonoBehaviour
                 {
                     rd.anim.SetBool("IsWalking", player.anim == "walk");
                     rd.anim.SetBool("Sit", player.anim == "sit");
+                    rd.anim.SetBool("Jump", player.anim == "jump");
                 }
 
                 rd.anim = ApplySkin(rd.go, (int)player.skin);
@@ -167,9 +168,11 @@ public class ColyseusManager : MonoBehaviour
         Vector3 pos = localPlayer.position;
         float rotY = localPlayer.GetComponent<PlayerMovement>().characterModel.eulerAngles.y;
 
-        bool isWalking = Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0;
+        var ccLocal = localPlayer.GetComponent<CharacterController>();
+        bool isWalkingInput = Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0;
         bool isSitting = Input.GetKey(KeyCode.C);
-        string animState = isSitting ? "sit" : (isWalking ? "walk" : "idle");
+        bool isInAir = (ccLocal != null) ? !ccLocal.isGrounded : false;
+        string animState = isSitting ? "sit" : (isInAir ? "jump" : (isWalkingInput ? "walk" : "idle"));
 
         room.Send("move", new Dictionary<string, object> {
             { "x", pos.x }, { "y", pos.y }, { "z", pos.z },
