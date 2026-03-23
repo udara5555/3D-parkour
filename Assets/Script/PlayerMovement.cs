@@ -34,8 +34,7 @@ public class PlayerMovement : MonoBehaviour
         net = FindAnyObjectByType<ColyseusManager>();
 
 
-        //Cursor.lockState = CursorLockMode.Locked;
-        //Cursor.visible = false;
+        
     }
 
     void Update()

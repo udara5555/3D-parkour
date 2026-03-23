@@ -63,7 +63,8 @@ public class ColyseusManager : MonoBehaviour
 
         //room = await client.Create<MyState>(roomName);
 
-        
+        LockAndHideCursor();
+
     }
 
     // Button: Join With Code
@@ -78,6 +79,8 @@ public class ColyseusManager : MonoBehaviour
         Debug.Log("JOINED roomId: " + room.RoomId);
 
         HookStateCallbacks();
+
+        LockAndHideCursor();
     }
 
     async System.Threading.Tasks.Task LeaveIfAny()
@@ -150,6 +153,11 @@ public class ColyseusManager : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            UnlockAndShowCursor();
+        }
+
         if (room == null || localPlayer == null) return;
 
         sendTimer += Time.deltaTime;
@@ -270,6 +278,17 @@ public class ColyseusManager : MonoBehaviour
         return activeAnim;
     }
 
+    void LockAndHideCursor()
+    {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    void UnlockAndShowCursor()
+    {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
 
 
 
