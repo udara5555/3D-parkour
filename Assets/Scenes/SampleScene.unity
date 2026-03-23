@@ -139,8 +139,8 @@ CharacterController:
   serializedVersion: 3
   m_Height: 2
   m_Radius: 0.5
-  m_SlopeLimit: 45
-  m_StepOffset: 0.3
+  m_SlopeLimit: 70
+  m_StepOffset: 1.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 1, z: 0}
@@ -1957,6 +1957,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: babc69194f771864c96aad0ae7a1a196, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: babc69194f771864c96aad0ae7a1a196, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: babc69194f771864c96aad0ae7a1a196, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.7
+      objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: babc69194f771864c96aad0ae7a1a196, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -6058,7 +6070,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a69b41f60a7ecc4dbe8e92f2f1b857b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ColyseusManager
-  serverUrl: ws://127.0.0.1:2567
+  serverUrl: wss://threed-parkour-1.onrender.com/
   roomName: my_room
   roomCodeInput: {fileID: 871263450}
   roomCodeText: {fileID: 1649954644}
