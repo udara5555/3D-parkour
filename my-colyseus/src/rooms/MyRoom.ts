@@ -73,7 +73,7 @@ export class MyRoom extends Room {
     });
 
     this.s.phase = "countdown";
-    let t = 10;
+    let t = 5;
     this.s.countdown = t;
     console.log("Countdown started!");
 

@@ -27,6 +27,10 @@ public class PlayerMovement : MonoBehaviour
 
     public int localClickCount { get; private set; } = 0;
 
+    // Auto-movement state
+    private bool isAutoMoving = false;
+    private float lastRecordedSpeed = 0f;
+
     void Start()
     {
         cc = GetComponent<CharacterController>();
@@ -82,6 +86,53 @@ public class PlayerMovement : MonoBehaviour
         // reset click count when race starts
         if (net != null && net.CurrentPhase == "racing" && localClickCount > 0)
             localClickCount = 0;
+
+        // Check for speed change during racing phase
+        if (net != null && net.CurrentPhase == "racing")
+        {
+            if (net.LocalPlayerSpeed != lastRecordedSpeed)
+            {
+                isAutoMoving = true;
+                lastRecordedSpeed = net.LocalPlayerSpeed;
+                Debug.Log($"Speed changed to {lastRecordedSpeed}, enabling auto-movement in +Z direction");
+            }
+        }
+
+        // Handle automatic movement in +Z direction
+        if (isAutoMoving && net != null && net.CurrentPhase == "racing")
+        {
+            Vector3 autoMove = Vector3.forward * net.LocalPlayerSpeed * Time.deltaTime;
+            cc.Move(autoMove);
+
+            // Apply gravity
+            if (cc.isGrounded && !isJumping)
+                yVelocity = -2f;
+            else
+                yVelocity += gravity * Time.deltaTime;
+
+            cc.Move(Vector3.up * yVelocity * Time.deltaTime);
+
+            // Play walking animation
+            anim.SetBool("IsWalking", true);
+            anim.SetBool("Sit", false);
+            anim.SetBool("Jump", false);
+
+            // Keep character facing forward (+Z)
+            transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+
+            // Send network update
+            if (net.IsInRoom)
+            {
+                sendTimer += Time.deltaTime;
+                if (sendTimer >= 0.05f)
+                {
+                    sendTimer = 0f;
+                    net.SendMove(transform.position, 0f, "walk");
+                }
+            }
+
+            return; // Skip normal movement controls
+        }
 
         // mouse yaw (camera direction)
         yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
