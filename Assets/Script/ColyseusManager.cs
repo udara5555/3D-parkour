@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -12,8 +11,8 @@ public class ColyseusManager : MonoBehaviour
     public string roomName = "my_room";
 
     [Header("UI")]
-    public TMP_InputField roomCodeInput;   // drag TMP input
-    public TMP_Text roomCodeText;          // optional: show created code
+    public TMP_InputField roomCodeInput;
+    public TMP_Text roomCodeText;
 
     [Header("Scene refs")]
     public Transform localPlayer;
@@ -29,8 +28,9 @@ public class ColyseusManager : MonoBehaviour
 
     public bool IsInRoom => room != null;
 
-    // NEW: track current game phase locally
     public string CurrentPhase { get; private set; } = "waiting";
+    public float LocalPlayerSpeed { get; private set; } = 5f;
+    public int ServerClickCount { get; private set; } = 0;
 
     class RemoteData
     {
@@ -46,32 +46,24 @@ public class ColyseusManager : MonoBehaviour
         client = new Client(serverUrl);
     }
 
-    // Button: Create Room
     public async void CreateRoom()
     {
         await LeaveIfAny();
-
         room = await client.Create<MyState>(roomName);
         Debug.Log("CREATED roomId: " + room.RoomId);
-
         if (roomCodeText != null)
             roomCodeText.text = "Room ID :" + room.RoomId;
-
         HookStateCallbacks();
         LockAndHideCursor();
     }
 
-    // Button: Join With Code
     public async void JoinWithCode()
     {
         await LeaveIfAny();
-
         string code = roomCodeInput ? roomCodeInput.text.Trim() : "";
         if (string.IsNullOrEmpty(code)) { Debug.LogError("Room code empty"); return; }
-
         room = await client.JoinById<MyState>(code);
         Debug.Log("JOINED roomId: " + room.RoomId);
-
         HookStateCallbacks();
         LockAndHideCursor();
     }
@@ -83,7 +75,6 @@ public class ColyseusManager : MonoBehaviour
             try { await room.Leave(); } catch { }
             room = null;
         }
-
         foreach (var kv in remotes)
             if (kv.Value.go) Destroy(kv.Value.go);
         remotes.Clear();
@@ -119,7 +110,6 @@ public class ColyseusManager : MonoBehaviour
             cb.OnChange(player, () =>
             {
                 if (!remotes.TryGetValue(sessionId, out var rd)) return;
-
                 rd.targetPos = new Vector3(player.x, player.y, player.z);
                 rd.targetRot = Quaternion.Euler(0f, player.rotY, 0f);
 
@@ -138,14 +128,14 @@ public class ColyseusManager : MonoBehaviour
         {
             if (remotes.TryGetValue(sessionId, out var rd) && rd.go)
                 Destroy(rd.go);
-
             remotes.Remove(sessionId);
         });
 
-        // Listen to phase and countdown on root state
+        // NOTE: SetLocalPlayerFrozen is REMOVED intentionally.
+        // PlayerMovement stays enabled and checks CurrentPhase itself.
+        // Disabling PlayerMovement would block click detection too.
         room.OnStateChange += (state, isFirst) =>
         {
-            // count total players and how many are in the ready zone
             int total = 0;
             int readyCount = 0;
             foreach (Player p in state.players.Values)
@@ -153,25 +143,35 @@ public class ColyseusManager : MonoBehaviour
                 total++;
                 if (p.ready) readyCount++;
             }
-
-            // update the "X/Y ready" waiting text
             CountdownUI.Instance?.UpdateWaiting(readyCount, total);
 
-            // handle phase changes
             if (CurrentPhase != state.phase)
             {
                 CurrentPhase = state.phase;
                 Debug.Log("Phase changed: " + state.phase);
 
-                // only show countdown panel when server confirms all ready
                 if (state.phase == "countdown") CountdownUI.Instance?.Show();
                 if (state.phase == "racing") CountdownUI.Instance?.Hide();
                 if (state.phase == "waiting") CountdownUI.Instance?.Hide();
             }
 
-            // update countdown number only during countdown
             if (state.phase == "countdown")
+            {
                 CountdownUI.Instance?.UpdateText((int)state.countdown);
+
+                if (state.players.TryGetValue(room.SessionId, out var localP))
+                    ServerClickCount = (int)localP.clicks;
+            }
+
+            if (state.phase == "racing")
+            {
+                if (state.players.TryGetValue(room.SessionId, out var localP))
+                {
+                    LocalPlayerSpeed = localP.speed;
+                    ServerClickCount = (int)localP.clicks;
+                    Debug.Log("Race started! Clicks: " + ServerClickCount + " | Speed: " + LocalPlayerSpeed);
+                }
+            }
         };
     }
 
@@ -245,35 +245,30 @@ public class ColyseusManager : MonoBehaviour
     public void SendMove(Vector3 pos, float rotY, string anim)
     {
         if (room == null) return;
-        room.Send("move", new
-        {
-            x = pos.x,
-            y = pos.y,
-            z = pos.z,
-            rotY = rotY,
-            anim = anim
-        });
+        room.Send("move", new { x = pos.x, y = pos.y, z = pos.z, rotY = rotY, anim = anim });
     }
 
     public void SendSkin(int skin)
     {
         if (room == null) return;
-        Debug.Log("SEND SKIN " + skin);
         room.Send("skin", new { skin = skin });
     }
 
-    // NEW: call this from ReadyZone.cs
     public void SendReady(bool isReady)
     {
         if (room == null) return;
-        Debug.Log("SEND READY: " + isReady);
         room.Send(isReady ? "player_ready" : "player_unready");
+    }
+
+    public void SendClick()
+    {
+        if (room == null) return;
+        room.Send("click");
     }
 
     Animator ApplySkin(GameObject go, int skinIndex)
     {
         Animator activeAnim = null;
-
         var skins = new System.Collections.Generic.List<Transform>();
 
         foreach (Transform t in go.transform)
@@ -288,7 +283,6 @@ public class ColyseusManager : MonoBehaviour
         {
             bool active = (i == skinIndex);
             skins[i].gameObject.SetActive(active);
-
             if (active)
                 activeAnim = skins[i].GetComponentInChildren<Animator>(true);
         }

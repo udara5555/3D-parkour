@@ -4,12 +4,10 @@
 // 
 // GENERATED USING @colyseus/schema 4.0.8
 // 
-
 using Colyseus.Schema;
 #if UNITY_5_3_OR_NEWER
 using UnityEngine.Scripting;
 #endif
-
 public partial class Player : Schema {
 #if UNITY_5_3_OR_NEWER
 [Preserve]
@@ -17,23 +15,20 @@ public partial class Player : Schema {
 public Player() { }
 	[Type(0, "number")]
 	public float x = default(float);
-
 	[Type(1, "number")]
 	public float y = default(float);
-
 	[Type(2, "number")]
 	public float z = default(float);
-
 	[Type(3, "number")]
 	public float rotY = default(float);
-
 	[Type(4, "string")]
 	public string anim = default(string);
-
 	[Type(5, "number")]
 	public float skin = default(float);
-
 	[Type(6, "boolean")]
 	public bool ready = default(bool);
+	[Type(7, "number")]
+	public float clicks = default(float);
+	[Type(8, "number")]
+	public float speed = 1f;
 }
-
