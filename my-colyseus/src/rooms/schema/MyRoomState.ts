@@ -8,10 +8,13 @@ export class Player extends Schema {
   @type("number") rotY = 0;
   @type("string") anim = "idle"; // idle/walk/sit
   @type("number") skin = 0;
-
+  @type("boolean") ready = false;  // NEW: is player in the ready zone?
 }
 
 export class MyState extends Schema {
   @type({ map: Player })
   players = new MapSchema<Player>();
+
+  @type("string") phase = "waiting";    // NEW: waiting | countdown | racing
+  @type("number") countdown = 0;        // NEW: countdown timer value
 }

@@ -29,8 +29,8 @@ public class ColyseusManager : MonoBehaviour
 
     public bool IsInRoom => room != null;
 
-    
-
+    // NEW: track current game phase locally
+    public string CurrentPhase { get; private set; } = "waiting";
 
     class RemoteData
     {
@@ -57,14 +57,8 @@ public class ColyseusManager : MonoBehaviour
         if (roomCodeText != null)
             roomCodeText.text = "Room ID :" + room.RoomId;
 
-        //if (roomCodeText) roomCodeText.text = "Room ID : " + room.RoomId;
-        
         HookStateCallbacks();
-
-        //room = await client.Create<MyState>(roomName);
-
         LockAndHideCursor();
-
     }
 
     // Button: Join With Code
@@ -79,7 +73,6 @@ public class ColyseusManager : MonoBehaviour
         Debug.Log("JOINED roomId: " + room.RoomId);
 
         HookStateCallbacks();
-
         LockAndHideCursor();
     }
 
@@ -148,16 +141,44 @@ public class ColyseusManager : MonoBehaviour
 
             remotes.Remove(sessionId);
         });
+
+        // Listen to phase and countdown on root state
+        room.OnStateChange += (state, isFirst) =>
+        {
+            // count total players and how many are in the ready zone
+            int total = 0;
+            int readyCount = 0;
+            foreach (Player p in state.players.Values)
+            {
+                total++;
+                if (p.ready) readyCount++;
+            }
+
+            // update the "X/Y ready" waiting text
+            CountdownUI.Instance?.UpdateWaiting(readyCount, total);
+
+            // handle phase changes
+            if (CurrentPhase != state.phase)
+            {
+                CurrentPhase = state.phase;
+                Debug.Log("Phase changed: " + state.phase);
+
+                // only show countdown panel when server confirms all ready
+                if (state.phase == "countdown") CountdownUI.Instance?.Show();
+                if (state.phase == "racing") CountdownUI.Instance?.Hide();
+                if (state.phase == "waiting") CountdownUI.Instance?.Hide();
+            }
+
+            // update countdown number only during countdown
+            if (state.phase == "countdown")
+                CountdownUI.Instance?.UpdateText((int)state.countdown);
+        };
     }
-
-
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
-        {
             UnlockAndShowCursor();
-        }
 
         if (room == null || localPlayer == null) return;
 
@@ -185,12 +206,10 @@ public class ColyseusManager : MonoBehaviour
             r.go.transform.position = Vector3.Lerp(r.go.transform.position, r.targetPos, Time.deltaTime * positionLerp);
             Transform visualRoot = null;
 
-            // default skin
             var r0 = r.go.transform.Find("root");
             if (r0 != null && r0.gameObject.activeSelf)
                 visualRoot = r0;
 
-            // other skins
             if (visualRoot == null)
             {
                 foreach (Transform t in r.go.transform)
@@ -212,7 +231,6 @@ public class ColyseusManager : MonoBehaviour
                 );
             }
         }
-
     }
 
     void LateUpdate()
@@ -221,16 +239,12 @@ public class ColyseusManager : MonoBehaviour
         {
             if (!rd.go) continue;
             rd.go.transform.position = Vector3.Lerp(rd.go.transform.position, rd.targetPos, Time.deltaTime * positionLerp);
-            //rd.go.transform.rotation = Quaternion.Slerp(rd.go.transform.rotation, rd.targetRot, Time.deltaTime * rotationSlerp);
         }
     }
 
     public void SendMove(Vector3 pos, float rotY, string anim)
     {
         if (room == null) return;
-
-        Debug.Log("SEND MOVE");
-
         room.Send("move", new
         {
             x = pos.x,
@@ -239,8 +253,6 @@ public class ColyseusManager : MonoBehaviour
             rotY = rotY,
             anim = anim
         });
-
-        
     }
 
     public void SendSkin(int skin)
@@ -248,7 +260,14 @@ public class ColyseusManager : MonoBehaviour
         if (room == null) return;
         Debug.Log("SEND SKIN " + skin);
         room.Send("skin", new { skin = skin });
+    }
 
+    // NEW: call this from ReadyZone.cs
+    public void SendReady(bool isReady)
+    {
+        if (room == null) return;
+        Debug.Log("SEND READY: " + isReady);
+        room.Send(isReady ? "player_ready" : "player_unready");
     }
 
     Animator ApplySkin(GameObject go, int skinIndex)
@@ -274,7 +293,6 @@ public class ColyseusManager : MonoBehaviour
                 activeAnim = skins[i].GetComponentInChildren<Animator>(true);
         }
 
-        // fallback for default skin where Animator is on top/root prefab
         if (activeAnim == null)
             activeAnim = go.GetComponentInChildren<Animator>(true);
 
@@ -292,9 +310,4 @@ public class ColyseusManager : MonoBehaviour
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }
-
-
-
-
-
 }

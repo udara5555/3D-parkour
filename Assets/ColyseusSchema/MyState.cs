@@ -17,5 +17,11 @@ public partial class MyState : Schema {
 public MyState() { }
 	[Type(0, "map", typeof(MapSchema<Player>))]
 	public MapSchema<Player> players = null;
+
+	[Type(1, "string")]
+	public string phase = default(string);
+
+	[Type(2, "number")]
+	public float countdown = default(float);
 }
 

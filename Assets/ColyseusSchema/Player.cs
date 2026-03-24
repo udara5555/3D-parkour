@@ -32,5 +32,8 @@ public Player() { }
 
 	[Type(5, "number")]
 	public float skin = default(float);
+
+	[Type(6, "boolean")]
+	public bool ready = default(bool);
 }
 
