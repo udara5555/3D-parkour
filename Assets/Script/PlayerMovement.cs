@@ -117,8 +117,10 @@ public class PlayerMovement : MonoBehaviour
             anim.SetBool("Sit", false);
             anim.SetBool("Jump", false);
 
-            // Keep character facing forward (+Z)
+            // Keep character facing +Z direction (body and model)
             transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+            if (characterModel != null)
+                characterModel.localRotation = Quaternion.LookRotation(Vector3.forward);
 
             // Send network update
             if (net.IsInRoom)

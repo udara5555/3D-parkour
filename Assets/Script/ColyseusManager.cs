@@ -36,6 +36,7 @@ public class ColyseusManager : MonoBehaviour
     {
         public GameObject go;
         public Vector3 targetPos;
+        public Vector3 initialPos;  // Store initial position
         public Quaternion targetRot;
         public Animator anim;
     }
@@ -89,7 +90,8 @@ public class ColyseusManager : MonoBehaviour
             if (sessionId == room.SessionId) return;
 
             var go = Instantiate(remotePlayerPrefab);
-            go.transform.position = new Vector3(player.x, player.y, player.z);
+            Vector3 initialPosition = new Vector3(player.x, player.y, player.z);
+            go.transform.position = initialPosition;
             Transform visualRoot = go.transform.Find("root");
             if (visualRoot != null)
                 visualRoot.rotation = Quaternion.Euler(0f, player.rotY, 0f);
@@ -103,6 +105,7 @@ public class ColyseusManager : MonoBehaviour
             {
                 go = go,
                 targetPos = go.transform.position,
+                initialPos = initialPosition,  // Store initial position
                 targetRot = go.transform.rotation,
                 anim = anim
             };
@@ -151,8 +154,13 @@ public class ColyseusManager : MonoBehaviour
                 Debug.Log("Phase changed: " + state.phase);
 
                 if (state.phase == "countdown") CountdownUI.Instance?.Show();
-                if (state.phase == "racing") CountdownUI.Instance?.Hide();
-                if (state.phase == "waiting") CountdownUI.Instance?.Hide();
+                if (state.phase == "racing") CountdownUI.Instance?.Show();
+                if (state.phase == "waiting")
+                {
+                    CountdownUI.Instance?.Hide();
+                    // Reset all players to their initial positions
+                    ReturnPlayersToInitialPositions();
+                }
             }
 
             if (state.phase == "countdown")
@@ -165,6 +173,8 @@ public class ColyseusManager : MonoBehaviour
 
             if (state.phase == "racing")
             {
+                CountdownUI.Instance?.UpdateRacingTimer((int)state.countdown);
+
                 if (state.players.TryGetValue(room.SessionId, out var localP))
                 {
                     LocalPlayerSpeed = localP.speed;
@@ -173,6 +183,31 @@ public class ColyseusManager : MonoBehaviour
                 }
             }
         };
+    }
+
+    void ReturnPlayersToInitialPositions()
+    {
+        // Return remote players to their initial positions
+        foreach (var rd in remotes.Values)
+        {
+            if (rd.go)
+            {
+                rd.targetPos = rd.initialPos;
+                rd.go.transform.position = rd.initialPos;
+                Debug.Log("Player returned to initial position: " + rd.initialPos);
+            }
+        }
+
+        // Return local player to their initial position
+        if (localPlayer != null && room != null)
+        {
+            if (room.State.players.TryGetValue(room.SessionId, out var localP))
+            {
+                Vector3 initialPos = new Vector3(localP.x, localP.y, localP.z);
+                localPlayer.position = initialPos;
+                Debug.Log("Local player returned to initial position: " + initialPos);
+            }
+        }
     }
 
     void Update()

@@ -75,7 +75,7 @@ export class MyRoom extends Room {
     this.s.phase = "countdown";
     let t = 5;
     this.s.countdown = t;
-    console.log("Countdown started!");
+    console.log("Countdown started! 5 seconds for clicking...");
 
     const interval = this.clock.setInterval(() => {
       t--;
@@ -83,7 +83,7 @@ export class MyRoom extends Room {
       if (t <= 0) {
         interval.clear();
 
-        // calculate speed for each player: clicks * DEFAULT_SPEED
+        // Countdown finished - calculate speed and start racing phase
         this.s.players.forEach((p) => {
           p.speed = p.clicks * DEFAULT_SPEED;
           // minimum speed so player always moves even if they didn't click
@@ -92,9 +92,48 @@ export class MyRoom extends Room {
         });
 
         this.s.phase = "racing";
-        console.log("RACE STARTED!");
+        console.log("COUNTDOWN FINISHED! Racing phase started with auto-movement...");
+
+        // Start the 10-second racing/movement phase
+        this.startRacingPhase();
       }
     }, 1000);
+  }
+
+  startRacingPhase() {
+    // 10 second timer - players auto-move based on their click count
+    let t = 10;
+    this.s.countdown = t;
+    console.log("Racing phase started! 10 second auto-movement timer...");
+
+    const racingInterval = this.clock.setInterval(() => {
+      t--;
+      this.s.countdown = t;
+      if (t <= 0) {
+        racingInterval.clear();
+
+        // 10 seconds finished - reset everything
+        this.resetToWaiting();
+      }
+    }, 1000);
+  }
+
+  resetToWaiting() {
+    this.s.phase = "waiting";
+    this.s.countdown = 0;
+
+    // Reset all players to initial positions and state
+    this.s.players.forEach((p) => {
+      p.ready = false;
+      p.clicks = 0;
+      p.speed = 1.0;
+      p.x = Math.random() * 4;
+      p.z = Math.random() * 4;
+      p.rotY = 0;
+      p.anim = "idle";
+    });
+
+    console.log("Racing phase finished! All players reset to initial positions. Back to waiting phase.");
   }
 
   onJoin(client: Client) {
