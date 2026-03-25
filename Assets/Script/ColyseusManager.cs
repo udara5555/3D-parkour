@@ -160,6 +160,7 @@ public class ColyseusManager : MonoBehaviour
                     CountdownUI.Instance?.Hide();
                     // Reset all players to their initial positions
                     ReturnPlayersToInitialPositions();
+                    FindAnyObjectByType<FloorScaler>()?.ResetFloorScale();
                 }
             }
 
