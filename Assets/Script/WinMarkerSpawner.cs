@@ -1,39 +1,66 @@
 using UnityEngine;
 using TMPro;
 
-// Attach this to any GameObject in the scene (e.g. an empty "MarkerManager")
-// Assign the winMarkerPrefab in the Inspector
 public class WinMarkerSpawner : MonoBehaviour
 {
-    [Header("Settings")]
-    public int totalMarkers = 20;        // how many markers to spawn (20 = up to 1000 units)
-    public float markerInterval = 50f;   // every 50 units on Z axis
-    public float markerYOffset = 2f;     // height above floor
-    public float markerXOffset = 0f;     // side offset if needed
+    public GameObject winMarkerPrefab;
+    public Transform player;
 
-    [Header("Prefab")]
-    public GameObject winMarkerPrefab;   // assign in Inspector (see setup below)
+    public float markerInterval = 50f;
+    public float markerYOffset = 2f;
+
+    private float nextSpawnZ;
+    private bool raceStarted = false;
+
+    private ColyseusManager net;
 
     void Start()
     {
-        SpawnMarkers();
+        net = FindAnyObjectByType<ColyseusManager>();
     }
 
-    void SpawnMarkers()
+    void Update()
     {
-        for (int i = 1; i <= totalMarkers; i++)
+        if (net == null || player == null) return;
+
+        // detect race start
+        if (!raceStarted && net.CurrentPhase == "racing")
         {
-            float zPos = i * markerInterval;
+            raceStarted = true;
 
-            Vector3 pos = new Vector3(markerXOffset, markerYOffset, zPos);
-            GameObject marker = Instantiate(winMarkerPrefab, pos, Quaternion.identity);
+            nextSpawnZ = player.position.z + markerInterval;
 
-            // set the label text
-            var label = marker.GetComponentInChildren<TMP_Text>();
-            if (label != null)
-                label.text = (i * (int)markerInterval) + "\nWins";
-
-            marker.name = "WinMarker_" + (i * (int)markerInterval);
+            SpawnMarker(nextSpawnZ); // FIRST marker
         }
+
+        if (!raceStarted) return;
+
+        float playerZ = player.position.z;
+
+        // spawn next AFTER passing previous
+        if (playerZ >= nextSpawnZ)
+        {
+            nextSpawnZ += markerInterval;
+            SpawnMarker(nextSpawnZ);
+        }
+    }
+
+    void SpawnMarker(float zPos)
+    {
+        Vector3 pos = new Vector3(0f, markerYOffset, zPos);
+        GameObject marker = Instantiate(winMarkerPrefab, pos, Quaternion.identity, transform);
+
+        var label = marker.GetComponentInChildren<TMP_Text>();
+        if (label != null)
+            label.text = "+1 WINS";
+    }
+
+    public void ResetSpawner()
+    {
+        raceStarted = false;
+        nextSpawnZ = 0f;
+
+        foreach (Transform child in transform)
+            Destroy(child.gameObject);
     }
 }

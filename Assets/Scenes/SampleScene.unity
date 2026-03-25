@@ -8725,11 +8725,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1390d8d5b3270f6419fcf62acad5e579, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WinMarkerSpawner
-  totalMarkers: 20
-  markerInterval: 50
-  markerYOffset: 2
-  markerXOffset: 0
   winMarkerPrefab: {fileID: 3838188188565602886, guid: 4c94e38422f490344855fc156936cb7d, type: 3}
+  player: {fileID: 543450653310690730}
+  markerInterval: 100
+  markerYOffset: 2
 --- !u!4 &1955018187
 Transform:
   m_ObjectHideFlags: 0

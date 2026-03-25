@@ -161,6 +161,11 @@ public class ColyseusManager : MonoBehaviour
                     // Reset all players to their initial positions
                     ReturnPlayersToInitialPositions();
                     FindAnyObjectByType<FloorScaler>()?.ResetFloorScale();
+
+                    FindAnyObjectByType<WinMarkerSpawner>()?.ResetSpawner();
+                    //FindAnyObjectByType<WinMarkerSpawner>()?.ResetSpawner();
+
+                    
                 }
             }
 
@@ -339,5 +344,11 @@ public class ColyseusManager : MonoBehaviour
     {
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+    }
+
+    public void SendBonusClicks(int amount)
+    {
+        if (room == null) return;
+        room.Send("bonus_clicks", new { amount = amount });
     }
 }
