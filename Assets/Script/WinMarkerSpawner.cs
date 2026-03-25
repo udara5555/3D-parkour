@@ -14,6 +14,10 @@ public class WinMarkerSpawner : MonoBehaviour
 
     private ColyseusManager net;
 
+    public int winCount = 0;
+
+    //public TMP_Text winText;
+
     void Start()
     {
         net = FindAnyObjectByType<ColyseusManager>();
@@ -63,4 +67,20 @@ public class WinMarkerSpawner : MonoBehaviour
         foreach (Transform child in transform)
             Destroy(child.gameObject);
     }
+
+    public void AddWin()
+    {
+        winCount++;
+        Debug.Log("Wins: " + winCount);
+
+
+
+    }
+
+    public int GetWins()
+    {
+        return winCount;
+    }
+
+    
 }

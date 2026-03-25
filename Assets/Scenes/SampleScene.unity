@@ -8729,6 +8729,7 @@ MonoBehaviour:
   player: {fileID: 543450653310690730}
   markerInterval: 100
   markerYOffset: 2
+  winCount: 0
 --- !u!4 &1955018187
 Transform:
   m_ObjectHideFlags: 0

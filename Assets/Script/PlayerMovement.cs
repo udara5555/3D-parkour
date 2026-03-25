@@ -63,6 +63,8 @@ public class PlayerMovement : MonoBehaviour
             // NEW: detect click/tap and send to server during countdown
             if (Input.GetMouseButtonDown(0))
             {
+                
+
                 localClickCount++;
                 net?.SendClick();
                 Debug.Log("Local Clicks: " + localClickCount + " | Server Clicks: " + net.ServerClickCount);
