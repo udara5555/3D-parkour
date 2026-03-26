@@ -10,6 +10,8 @@ public class FloorScaler : MonoBehaviour
     private Vector3 initialPosition;
     private float currentScaleZ;
 
+    Renderer rend;
+
     void Start()
     {
         net = FindAnyObjectByType<ColyseusManager>();
@@ -22,6 +24,8 @@ public class FloorScaler : MonoBehaviour
         initialScale = floor.localScale;
         initialPosition = floor.position;
         currentScaleZ = initialScale.z;
+
+        rend = GetComponent<Renderer>();
     }
 
     void Update()
@@ -41,6 +45,10 @@ public class FloorScaler : MonoBehaviour
         Vector3 newPosition = floor.position;
         newPosition.z += positionDelta;
         floor.position = newPosition;
+
+        Vector3 scale = transform.localScale;
+
+        rend.material.mainTextureScale = new Vector2(scale.x, scale.z);
     }
 
     // Optional: Reset floor to initial scale and position
