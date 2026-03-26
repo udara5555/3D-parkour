@@ -16,7 +16,7 @@ public class ThirdPersonCamera : MonoBehaviour
     {
         if (!target) return;
         Vector3 desired = target.position + target.rotation * offset;
-        transform.position = Vector3.Lerp(transform.position, desired, smooth * Time.deltaTime);
+        transform.position = desired;
         transform.LookAt(target.position);
     }
 }
