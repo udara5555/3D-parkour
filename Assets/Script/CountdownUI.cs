@@ -1,50 +1,73 @@
 using UnityEngine;
 using TMPro;
 
-// Attach this to a Canvas Panel GameObject
 public class CountdownUI : MonoBehaviour
 {
     public static CountdownUI Instance;
 
     [Header("Countdown Panel")]
-    public TMP_Text countdownText;   // shows 5,4,3,2,1,GO! or 10,9,8...1,GO!
-    public GameObject panel;         // the countdown panel
+    public TMP_Text countdownText;
+    public GameObject panel; // countdown panel
 
-    [Header("Waiting UI (optional)")]
-    public TMP_Text waitingText;     // shows "Waiting... (1/2 ready)"
+    [Header("Race Panel")] 
+    public TMP_Text raceText;
+    public GameObject racePanel;
+
+    [Header("Waiting Panel")] 
+    public TMP_Text waitingText;
+    public GameObject waitingPanel;
 
     void Awake()
     {
         Instance = this;
-        if (panel) panel.SetActive(false);  // hidden at start
+
+        if (panel) panel.SetActive(false);
+        if (racePanel) racePanel.SetActive(false);     
+        if (waitingPanel) waitingPanel.SetActive(true); 
     }
 
     public void Show()
     {
         if (panel) panel.SetActive(true);
+        if (racePanel) racePanel.SetActive(false);  
+        if (waitingPanel) waitingPanel.SetActive(false);
     }
 
     public void Hide()
     {
         if (panel) panel.SetActive(false);
+        if (racePanel) racePanel.SetActive(false);  
+        if (waitingPanel) waitingPanel.SetActive(true); 
     }
 
     public void UpdateText(int value)
     {
         if (countdownText == null) return;
+
+        Show(); // ensure countdown panel active
+
         countdownText.text = value > 0 ? value.ToString() : "GO!";
     }
 
     public void UpdateRacingTimer(int value)
     {
-        if (countdownText == null) return;
-        countdownText.text = value > 0 ? value.ToString() : "GO!";
+        if (raceText == null) return;
+
+        if (panel) panel.SetActive(false);        //  switch panels
+        if (waitingPanel) waitingPanel.SetActive(false);
+        if (racePanel) racePanel.SetActive(true);
+
+        raceText.text = value.ToString();
     }
 
-    // called every state change to show how many are ready
     public void UpdateWaiting(int readyCount, int totalCount)
     {
         if (waitingText == null) return;
+
+        if (panel) panel.SetActive(false);        //  switch panels
+        if (racePanel) racePanel.SetActive(false);
+        if (waitingPanel) waitingPanel.SetActive(true);
+
         waitingText.text = "Waiting... (" + readyCount + "/" + totalCount + " ready)";
     }
 }
