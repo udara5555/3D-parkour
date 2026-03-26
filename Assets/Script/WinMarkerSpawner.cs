@@ -16,8 +16,6 @@ public class WinMarkerSpawner : MonoBehaviour
 
     public int winCount = 0;
 
-    //public TMP_Text winText;
-
     void Start()
     {
         net = FindAnyObjectByType<ColyseusManager>();
@@ -34,17 +32,20 @@ public class WinMarkerSpawner : MonoBehaviour
 
             nextSpawnZ = player.position.z + markerInterval;
 
-            SpawnMarker(nextSpawnZ); // FIRST marker
+            SpawnMarker(nextSpawnZ); // first marker
         }
 
         if (!raceStarted) return;
 
         float playerZ = player.position.z;
 
-        // spawn next AFTER passing previous
-        if (playerZ >= nextSpawnZ)
+        // IMPORTANT: use WHILE (not IF)
+        while (playerZ >= nextSpawnZ)
         {
+            AddWin(); // count win
+
             nextSpawnZ += markerInterval;
+
             SpawnMarker(nextSpawnZ);
         }
     }
@@ -72,15 +73,10 @@ public class WinMarkerSpawner : MonoBehaviour
     {
         winCount++;
         Debug.Log("Wins: " + winCount);
-
-        
-
     }
 
     public int GetWins()
     {
         return winCount;
     }
-
-    
 }

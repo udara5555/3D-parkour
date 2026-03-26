@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class WinMarker : MonoBehaviour
 {
-    private void OnTriggerEnter(Collider other)
+    /*private void OnTriggerEnter(Collider other)
     {
         Debug.Log("Triggered by: " + other.name);
 
@@ -13,7 +13,7 @@ public class WinMarker : MonoBehaviour
             FindAnyObjectByType<WinMarkerSpawner>()?.AddWin();
             Destroy(gameObject);
         }
-    }
+    }*/
 
 
 }
