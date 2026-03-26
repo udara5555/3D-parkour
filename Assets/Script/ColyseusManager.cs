@@ -346,9 +346,9 @@ public class ColyseusManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
     }
 
-    public void SendBonusClicks(int amount)
+    public void SendInitialBonus(int bonus)
     {
         if (room == null) return;
-        room.Send("bonus_clicks", new { amount = amount });
+        room.Send("bonus", new { value = bonus });
     }
 }

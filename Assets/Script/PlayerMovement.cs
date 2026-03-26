@@ -63,7 +63,15 @@ public class PlayerMovement : MonoBehaviour
             // NEW: detect click/tap and send to server during countdown
             if (Input.GetMouseButtonDown(0))
             {
-                
+                if (localClickCount == 0)
+                {
+                    int bestEgg = GetBestEggValue();
+                    int bonus = bestEgg / 10;
+
+                    localClickCount = bonus;
+
+                    net?.SendInitialBonus(bonus);
+                }
 
                 localClickCount++;
                 net?.SendClick();
@@ -220,4 +228,19 @@ public class PlayerMovement : MonoBehaviour
     public void OnJump() => jumpPressed = true;
     public void OnSitDown() => sitPressed = true;
     public void OnSitUp() => sitPressed = false;
+
+    int GetBestEggValue()
+    {
+        var eggs = FindObjectsByType<EggMilestone>(FindObjectsSortMode.None);
+
+        int best = 0;
+
+        foreach (var egg in eggs)
+        {
+            if (egg.IsUnlocked() && egg.eggValue > best)
+                best = egg.eggValue;
+        }
+
+        return best;
+    }
 }

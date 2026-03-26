@@ -54,6 +54,18 @@ export class MyRoom extends Room {
       p.clicks++;
       console.log(client.sessionId, "clicks:", p.clicks);
     });
+
+    this.onMessage("bonus", (client, data) => {
+      const p = this.s.players.get(client.sessionId);
+      if (!p) return;
+
+      // only allow during countdown
+      if (this.s.phase !== "countdown") return;
+
+      p.clicks += data.value;
+
+      console.log(client.sessionId, "bonus clicks:", data.value, "total:", p.clicks);
+    });
   }
 
   checkAllReady() {

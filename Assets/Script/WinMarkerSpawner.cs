@@ -73,7 +73,7 @@ public class WinMarkerSpawner : MonoBehaviour
         winCount++;
         Debug.Log("Wins: " + winCount);
 
-
+        
 
     }
 
