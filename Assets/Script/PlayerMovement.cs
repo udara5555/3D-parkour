@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public float speed = 5f;
+    public float speed = 3f;
     public float gravity = -9.8f;
     public float mouseSensitivity = 2f;
 
@@ -30,6 +30,8 @@ public class PlayerMovement : MonoBehaviour
     // Auto-movement state
     private bool isAutoMoving = false;
     private float lastRecordedSpeed = 0f;
+
+    public int startClicks = 0;
 
     void Start()
     {
@@ -65,12 +67,10 @@ public class PlayerMovement : MonoBehaviour
             {
                 if (localClickCount == 0)
                 {
-                    int bestEgg = GetBestEggValue();
-                    int bonus = bestEgg / 10;
 
-                    localClickCount = bonus;
+                    localClickCount = startClicks;
 
-                    net?.SendInitialBonus(bonus);
+                    net?.SendInitialBonus(startClicks);
                 }
 
                 localClickCount++;
@@ -93,9 +93,14 @@ public class PlayerMovement : MonoBehaviour
             return; // skip movement input
         }
 
-        // reset click count when race starts
-        if (net != null && net.CurrentPhase == "racing" && localClickCount > 0)
+        // reset click count after race finishes
+        if (net != null && net.CurrentPhase == "waiting")
+        {
+            int bestEgg = GetBestEggValue();
+            startClicks = bestEgg / 10;
+
             localClickCount = 0;
+        }
 
         // Check for speed change during racing phase
         if (net != null && net.CurrentPhase == "racing")
