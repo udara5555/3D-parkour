@@ -165,7 +165,7 @@ public class ColyseusManager : MonoBehaviour
                     FindAnyObjectByType<WinMarkerSpawner>()?.ResetSpawner();
                     //FindAnyObjectByType<WinMarkerSpawner>()?.ResetSpawner();
 
-                    
+
                 }
             }
 
