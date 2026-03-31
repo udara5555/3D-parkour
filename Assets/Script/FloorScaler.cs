@@ -9,6 +9,7 @@ public class FloorScaler : MonoBehaviour
     private Vector3 initialScale;
     private Vector3 initialPosition;
     private float currentScaleZ;
+    private int localClickCount = 0;
 
     Renderer rend;
 
@@ -30,28 +31,54 @@ public class FloorScaler : MonoBehaviour
 
     void Update()
     {
-        if (net == null || !net.IsInRoom || net.CurrentPhase != "racing")
+        if (net == null || !net.IsInRoom)
             return;
 
-        // Calculate delta based on player's current speed
-        float scaleDelta = net.LocalPlayerSpeed * Time.deltaTime;
-        float positionDelta = (net.LocalPlayerSpeed * 0.5f) * Time.deltaTime; // Half the speed
+        // Reset floor when racing phase ends
+        if (net.CurrentPhase != "racing")
+        {
+            ResetFloorScale();
+            return;
+        }
+
+        // Get local player reference to sync click count
+        GameObject localPlayer = GameObject.FindWithTag("LocalPlayer");
+        if (localPlayer != null)
+        {
+            PlayerMovementNew playerMovement = localPlayer.GetComponent<PlayerMovementNew>();
+            if (playerMovement != null)
+            {
+                // Use reflection to get the private localClickCount
+                var field = typeof(PlayerMovementNew).GetField("localClickCount", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field != null)
+                    localClickCount = (int)field.GetValue(playerMovement);
+            }
+        }
+
+        // Calculate final speed with click multiplier (same as player)
+        float clickMultiplier = 1f + (localClickCount * 0.1f); // Each click adds 10% speed
+        float finalSpeed = net.LocalPlayerSpeed * clickMultiplier;
+        
+        // Calculate scale delta based on player's actual speed with click multiplier
+        float scaleDelta = finalSpeed * Time.deltaTime;
         
         // Increase Z scale by full speed amount
         currentScaleZ += scaleDelta;
         floor.localScale = new Vector3(initialScale.x, initialScale.y, currentScaleZ);
         
-        // Increase Z position by half the speed amount
+        // Move floor forward by half the scale increase
+        // This makes the right end stay constant while left end grows
         Vector3 newPosition = floor.position;
-        newPosition.z += positionDelta;
+        newPosition.z += scaleDelta * 0.5f;
         floor.position = newPosition;
 
+        // Update texture scale to match world scale
         Vector3 scale = transform.localScale;
-
         rend.material.mainTextureScale = new Vector2(scale.x, scale.z);
     }
 
-    // Optional: Reset floor to initial scale and position
+    // Reset floor to initial scale and position
     public void ResetFloorScale()
     {
         currentScaleZ = initialScale.z;

@@ -32,6 +32,12 @@ public class PlayerMovementNew : MonoBehaviour
     private int jumpHash = Animator.StringToHash("Jump");
     private int sitHash = Animator.StringToHash("Sit");
 
+    // Click counting during countdown
+    private int localClickCount = 0;
+    private int startClicks = 0;
+    private bool isAutoMoving = false;
+    private float lastRecordedSpeed = 0f;
+
     void Start()
     {
         cc = GetComponent<CharacterController>();
@@ -61,6 +67,41 @@ public class PlayerMovementNew : MonoBehaviour
 
     void Update()
     {
+        // FREEZE during countdown but allow clicking
+        bool isFrozen = (net != null && net.CurrentPhase == "countdown");
+
+        if (isFrozen)
+        {
+            HandleCountdownPhase();
+            return; // Skip all other movement
+        }
+
+        // Reset click count after race finishes
+        if (net != null && net.CurrentPhase == "waiting")
+        {
+            int bestEgg = GetBestEggValue();
+            startClicks = bestEgg / 10;
+            localClickCount = 0;
+        }
+
+        // Check for speed change during racing phase
+        if (net != null && net.CurrentPhase == "racing")
+        {
+            if (net.LocalPlayerSpeed != lastRecordedSpeed)
+            {
+                isAutoMoving = true;
+                lastRecordedSpeed = net.LocalPlayerSpeed;
+                Debug.Log($"Speed changed to {lastRecordedSpeed}, enabling auto-movement in +Z direction with click multiplier");
+            }
+        }
+
+        // Handle automatic movement during racing phase
+        if (isAutoMoving && net != null && net.CurrentPhase == "racing")
+        {
+            HandleRacingAutoMovement();
+            return; // Skip normal movement controls
+        }
+
         HandleRotation();
         HandleJump();
         HandleMovement();
@@ -74,6 +115,89 @@ public class PlayerMovementNew : MonoBehaviour
             {
                 sendTimer = 0f;
                 SendNetworkUpdate();
+            }
+        }
+    }
+
+    void HandleCountdownPhase()
+    {
+        // Detect click/tap during countdown
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (localClickCount == 0)
+            {
+                localClickCount = startClicks;
+                net?.SendInitialBonus(startClicks);
+            }
+
+            localClickCount++;
+            net?.SendClick();
+            Debug.Log("Local Clicks: " + localClickCount + " | Server Clicks: " + net.ServerClickCount);
+        }
+
+        // Stop all animations during countdown
+        if (animator != null)
+        {
+            animator.SetBool(walkHash, false);
+            animator.SetBool(sitHash, false);
+            animator.ResetTrigger(jumpHash);
+        }
+
+        // Apply gravity while frozen
+        if (cc.isGrounded)
+            yVelocity = -2f;
+        else
+            yVelocity += gravity * Time.deltaTime;
+
+        cc.Move(Vector3.up * yVelocity * Time.deltaTime);
+    }
+
+    void HandleRacingAutoMovement()
+    {
+        // Use server-assigned speed during racing phase (same technique as PlayerMovement.cs)
+        float currentSpeed = speed;
+        if (net != null && net.CurrentPhase == "racing")
+            currentSpeed = net.LocalPlayerSpeed;
+
+        // Auto-move in +Z direction
+        Vector3 autoMove = Vector3.forward * currentSpeed * Time.deltaTime;
+        cc.Move(autoMove);
+
+        // Apply gravity
+        if (cc.isGrounded)
+            yVelocity = -2f;
+        else
+            yVelocity += gravity * Time.deltaTime;
+
+        cc.Move(Vector3.up * yVelocity * Time.deltaTime);
+
+        // Play walking animation
+        if (animator != null)
+        {
+            animator.SetBool(walkHash, true);
+            animator.SetBool(sitHash, false);
+            animator.ResetTrigger(jumpHash);
+        }
+
+        // Keep character facing +Z direction - rotate around Y axis only
+        transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+        if (characterModel != null)
+        {
+            // Rotate character model around Y axis only to face +Z direction
+            Vector3 currentEuler = characterModel.localEulerAngles;
+            float targetYAngle = 0f; // Face forward (+Z)
+            float smoothedYAngle = Mathf.LerpAngle(currentEuler.y, targetYAngle, Time.deltaTime * 10f);
+            characterModel.localRotation = Quaternion.Euler(currentEuler.x, smoothedYAngle, currentEuler.z);
+        }
+
+        // Send network update
+        if (net.IsInRoom)
+        {
+            sendTimer += Time.deltaTime;
+            if (sendTimer >= SEND_INTERVAL)
+            {
+                sendTimer = 0f;
+                net.SendMove(transform.position, 0f, "walk");
             }
         }
     }
@@ -213,8 +337,23 @@ public class PlayerMovementNew : MonoBehaviour
         
         string animState = isSitting ? "sit" : (isInAir ? "jump" : (isWalking ? "walk" : "idle"));
         
-        Debug.Log($"Sending: pos={pos}, rot={rotY}, anim={animState}");  // Add this for debugging
+        //Debug.Log($"Sending: pos={pos}, rot={rotY}, anim={animState}");  // Add this for debugging
         net.SendMove(pos, rotY, animState);
+    }
+
+    int GetBestEggValue()
+    {
+        var eggs = FindObjectsByType<EggMilestone>(FindObjectsSortMode.None);
+
+        int best = 0;
+
+        foreach (var egg in eggs)
+        {
+            if (egg.IsUnlocked() && egg.eggValue > best)
+                best = egg.eggValue;
+        }
+
+        return best;
     }
 
     // Call this method from Jump button

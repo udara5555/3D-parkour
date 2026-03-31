@@ -8570,7 +8570,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WinMarkerSpawner
   winMarkerPrefab: {fileID: 3838188188565602886, guid: 4c94e38422f490344855fc156936cb7d, type: 3}
-  player: {fileID: 0}
+  player: {fileID: 2136651965}
   markerInterval: 100
   markerYOffset: 2
   winCount: 0
