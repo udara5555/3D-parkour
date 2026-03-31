@@ -29,14 +29,19 @@ public class PlayerMovementNew : MonoBehaviour
 
     // Animation parameter hashes for performance
     private int walkHash = Animator.StringToHash("Walk");
+    private int runHash = Animator.StringToHash("Run");
     private int jumpHash = Animator.StringToHash("Jump");
     private int sitHash = Animator.StringToHash("Sit");
+    private int dieHash = Animator.StringToHash("Die");
 
     // Click counting during countdown
     private int localClickCount = 0;
     private int startClicks = 0;
     private bool isAutoMoving = false;
     private float lastRecordedSpeed = 0f;
+    private bool hasDiedAtEnd = false;
+    private float dieAnimationTimer = 0f;
+    private const float DIE_ANIMATION_DELAY = 1f;
 
     void Start()
     {
@@ -76,9 +81,55 @@ public class PlayerMovementNew : MonoBehaviour
             return; // Skip all other movement
         }
 
-        // Reset click count after race finishes
-        if (net != null && net.CurrentPhase == "waiting")
+        // Handle die animation delay period - keep die animation playing for 1 second
+        if (hasDiedAtEnd && net != null && net.CurrentPhase == "waiting")
         {
+            dieAnimationTimer += Time.deltaTime;
+            
+            // Keep die animation parameter active during delay
+            if (animator != null)
+            {
+                animator.SetBool(dieHash, true);
+            }
+            
+            // After delay, transition to idle
+            if (dieAnimationTimer >= DIE_ANIMATION_DELAY)
+            {
+                dieAnimationTimer = 0f;
+                isAutoMoving = false;
+                hasDiedAtEnd = false;
+                if (animator != null)
+                {
+                    // Disable die animation to transition back to idle
+                    animator.SetBool(dieHash, false);
+                    animator.SetBool(walkHash, false);
+                    animator.SetBool(runHash, false);
+                    animator.SetBool(sitHash, false);
+                    animator.ResetTrigger(jumpHash);
+                }
+                Debug.Log("Die animation complete, returning to idle");
+            }
+            // During delay, don't process any other movement
+            return;
+        }
+
+        // Reset animations and auto-movement when returning to waiting phase (only if not in die animation state)
+        if (net != null && net.CurrentPhase == "waiting" && !hasDiedAtEnd)
+        {
+            if (isAutoMoving)
+            {
+                isAutoMoving = false;
+                dieAnimationTimer = 0f;
+                if (animator != null)
+                {
+                    animator.SetBool(walkHash, false);
+                    animator.SetBool(runHash, false);
+                    animator.SetBool(sitHash, false);
+                    animator.ResetTrigger(jumpHash);
+                    animator.SetBool(dieHash, false);
+                }
+            }
+
             int bestEgg = GetBestEggValue();
             startClicks = bestEgg / 10;
             localClickCount = 0;
@@ -90,6 +141,8 @@ public class PlayerMovementNew : MonoBehaviour
             if (net.LocalPlayerSpeed != lastRecordedSpeed)
             {
                 isAutoMoving = true;
+                hasDiedAtEnd = false;
+                dieAnimationTimer = 0f;
                 lastRecordedSpeed = net.LocalPlayerSpeed;
                 Debug.Log($"Speed changed to {lastRecordedSpeed}, enabling auto-movement in +Z direction with click multiplier");
             }
@@ -154,6 +207,20 @@ public class PlayerMovementNew : MonoBehaviour
 
     void HandleRacingAutoMovement()
     {
+        // Check if we've already triggered die animation (transitioning from racing to waiting)
+        if (!hasDiedAtEnd && net != null && net.CurrentPhase != "racing")
+        {
+            hasDiedAtEnd = true;
+            dieAnimationTimer = 0f;
+            if (animator != null)
+            {
+                animator.SetBool(runHash, false);
+                animator.SetTrigger(dieHash);
+                Debug.Log("Die animation triggered at end of race");
+            }
+            return;
+        }
+
         // Use server-assigned speed during racing phase (same technique as PlayerMovement.cs)
         float currentSpeed = speed;
         if (net != null && net.CurrentPhase == "racing")
@@ -171,10 +238,11 @@ public class PlayerMovementNew : MonoBehaviour
 
         cc.Move(Vector3.up * yVelocity * Time.deltaTime);
 
-        // Play walking animation
+        // Play running animation instead of walking
         if (animator != null)
         {
-            animator.SetBool(walkHash, true);
+            animator.SetBool(walkHash, false);
+            animator.SetBool(runHash, true);
             animator.SetBool(sitHash, false);
             animator.ResetTrigger(jumpHash);
         }
@@ -197,7 +265,7 @@ public class PlayerMovementNew : MonoBehaviour
             if (sendTimer >= SEND_INTERVAL)
             {
                 sendTimer = 0f;
-                net.SendMove(transform.position, 0f, "walk");
+                net.SendMove(transform.position, 0f, "run");
             }
         }
     }
@@ -248,6 +316,7 @@ public class PlayerMovementNew : MonoBehaviour
             cc.Move(Vector3.up * yVelocity * Time.deltaTime);
             return;
         }
+
 
         // Input
         float h = Input.GetAxisRaw("Horizontal");
