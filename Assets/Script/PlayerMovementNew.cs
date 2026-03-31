@@ -20,17 +20,24 @@ public class PlayerMovementNew : MonoBehaviour
     private float yVelocity = 0f;
     private bool jumpPressed = false;
     private bool sitPressed = false;
+    
+    // Network references
+    private ColyseusManager net;
+    private CharacterSwitcherNew skinSwitcher;
+    private float sendTimer = 0f;
+    private const float SEND_INTERVAL = 0.05f;
 
     // Animation parameter hashes for performance
     private int walkHash = Animator.StringToHash("Walk");
     private int jumpHash = Animator.StringToHash("Jump");
-    private int isGroundedHash = Animator.StringToHash("IsGrounded");
     private int sitHash = Animator.StringToHash("Sit");
 
     void Start()
     {
         cc = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
+        net = FindAnyObjectByType<ColyseusManager>();
+        skinSwitcher = GetComponent<CharacterSwitcherNew>();
         
         if (cc == null)
         {
@@ -58,6 +65,17 @@ public class PlayerMovementNew : MonoBehaviour
         HandleJump();
         HandleMovement();
         HandleSit();
+        
+        // Send network updates
+        if (net != null && net.IsInRoom)
+        {
+            sendTimer += Time.deltaTime;
+            if (sendTimer >= SEND_INTERVAL)
+            {
+                sendTimer = 0f;
+                SendNetworkUpdate();
+            }
+        }
     }
 
     void HandleRotation()
@@ -177,12 +195,26 @@ public class PlayerMovementNew : MonoBehaviour
             animator.SetBool(walkHash, false);
         }
 
-        // Update grounded state
-        animator.SetBool(isGroundedHash, isGrounded);
-        
         // Reset jump trigger when grounded to allow animation to transition back to Idle/Walk
         if (isGrounded)
             animator.ResetTrigger(jumpHash);
+    }
+
+    void SendNetworkUpdate()
+    {
+        if (net == null) return;
+        
+        Vector3 pos = transform.position;
+        float rotY = characterModel != null ? characterModel.eulerAngles.y : 0f;
+        
+        bool isWalking = animator.GetBool(walkHash);
+        bool isSitting = animator.GetBool(sitHash);
+        bool isInAir = !cc.isGrounded;
+        
+        string animState = isSitting ? "sit" : (isInAir ? "jump" : (isWalking ? "walk" : "idle"));
+        
+        Debug.Log($"Sending: pos={pos}, rot={rotY}, anim={animState}");  // Add this for debugging
+        net.SendMove(pos, rotY, animState);
     }
 
     // Call this method from Jump button

@@ -10,9 +10,14 @@ public class CharacterSwitcherNew : MonoBehaviour
     public Renderer bodyRenderer;     // Cube.011 (body, legs, head)
 
     private int currentSkinIndex = 0;
+    private ColyseusManager net;
+
+    public int CurrentSkinIndex => currentSkinIndex;
 
     void Start()
     {
+        net = FindAnyObjectByType<ColyseusManager>();
+        
         if (skinMaterials == null || skinMaterials.Length < 2)
         {
             Debug.LogError("CharacterSwitcherNew: Need 2 materials assigned!");
@@ -25,6 +30,18 @@ public class CharacterSwitcherNew : MonoBehaviour
     public void ChangeSkin()
     {
         currentSkinIndex = (currentSkinIndex + 1) % skinMaterials.Length;
+        ApplySkin(currentSkinIndex);
+        
+        if (net != null && net.IsInRoom)
+            net.SendSkin(currentSkinIndex);
+    }
+
+    public void SetSkin(int skinIndex)
+    {
+        if (skinIndex < 0 || skinIndex >= skinMaterials.Length)
+            return;
+        
+        currentSkinIndex = skinIndex;
         ApplySkin(currentSkinIndex);
     }
 

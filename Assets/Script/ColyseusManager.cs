@@ -36,7 +36,7 @@ public class ColyseusManager : MonoBehaviour
     {
         public GameObject go;
         public Vector3 targetPos;
-        public Vector3 initialPos;  // Store initial position
+        public Vector3 initialPos;
         public Quaternion targetRot;
         public Animator anim;
     }
@@ -55,7 +55,7 @@ public class ColyseusManager : MonoBehaviour
         if (roomCodeText != null)
             roomCodeText.text = "Room ID :" + room.RoomId;
         HookStateCallbacks();
-        LockAndHideCursor();
+        //LockAndHideCursor();
     }
 
     public async void JoinWithCode()
@@ -66,7 +66,7 @@ public class ColyseusManager : MonoBehaviour
         room = await client.JoinById<MyState>(code);
         Debug.Log("JOINED roomId: " + room.RoomId);
         HookStateCallbacks();
-        LockAndHideCursor();
+        //LockAndHideCursor();
     }
 
     async System.Threading.Tasks.Task LeaveIfAny()
@@ -96,7 +96,7 @@ public class ColyseusManager : MonoBehaviour
             if (visualRoot != null)
                 visualRoot.rotation = Quaternion.Euler(0f, player.rotY, 0f);
 
-            var pm = go.GetComponent<PlayerMovement>(); if (pm) pm.enabled = false;
+            var pmNew = go.GetComponent<PlayerMovementNew>(); if (pmNew) pmNew.enabled = false;
             var cc = go.GetComponent<CharacterController>(); if (cc) cc.enabled = false;
 
             var anim = ApplySkin(go, (int)player.skin);
@@ -105,7 +105,7 @@ public class ColyseusManager : MonoBehaviour
             {
                 go = go,
                 targetPos = go.transform.position,
-                initialPos = initialPosition,  // Store initial position
+                initialPos = initialPosition,
                 targetRot = go.transform.rotation,
                 anim = anim
             };
@@ -118,12 +118,22 @@ public class ColyseusManager : MonoBehaviour
 
                 if (rd.anim != null)
                 {
-                    rd.anim.SetBool("IsWalking", player.anim == "walk");
+                    // Set animation states based on server data
+                    rd.anim.SetBool("Walk", player.anim == "walk");
                     rd.anim.SetBool("Sit", player.anim == "sit");
                     rd.anim.SetBool("Jump", player.anim == "jump");
+                    
+                    // If idle, make sure Walk is false
+                    if (player.anim == "idle")
+                        rd.anim.SetBool("Walk", false);
                 }
 
-                rd.anim = ApplySkin(rd.go, (int)player.skin);
+                // Apply skin change using CharacterSwitcherNew
+                var skinSwitcher = rd.go.GetComponent<CharacterSwitcherNew>();
+                if (skinSwitcher != null)
+                {
+                    skinSwitcher.SetSkin((int)player.skin);
+                }
             });
         });
 
@@ -134,9 +144,6 @@ public class ColyseusManager : MonoBehaviour
             remotes.Remove(sessionId);
         });
 
-        // NOTE: SetLocalPlayerFrozen is REMOVED intentionally.
-        // PlayerMovement stays enabled and checks CurrentPhase itself.
-        // Disabling PlayerMovement would block click detection too.
         room.OnStateChange += (state, isFirst) =>
         {
             int total = 0;
@@ -158,14 +165,9 @@ public class ColyseusManager : MonoBehaviour
                 if (state.phase == "waiting")
                 {
                     CountdownUI.Instance?.Hide();
-                    // Reset all players to their initial positions
                     ReturnPlayersToInitialPositions();
                     FindAnyObjectByType<FloorScaler>()?.ResetFloorScale();
-
                     FindAnyObjectByType<WinMarkerSpawner>()?.ResetSpawner();
-                    //FindAnyObjectByType<WinMarkerSpawner>()?.ResetSpawner();
-
-
                 }
             }
 
@@ -193,7 +195,6 @@ public class ColyseusManager : MonoBehaviour
 
     void ReturnPlayersToInitialPositions()
     {
-        // Return remote players to their initial positions
         foreach (var rd in remotes.Values)
         {
             if (rd.go)
@@ -204,7 +205,6 @@ public class ColyseusManager : MonoBehaviour
             }
         }
 
-        // Return local player to their initial position
         if (localPlayer != null && room != null)
         {
             if (room.State.players.TryGetValue(room.SessionId, out var localP))
@@ -228,7 +228,11 @@ public class ColyseusManager : MonoBehaviour
         sendTimer = 0f;
 
         Vector3 pos = localPlayer.position;
-        float rotY = localPlayer.GetComponent<PlayerMovement>().characterModel.eulerAngles.y;
+        
+        var pmNew = localPlayer.GetComponent<PlayerMovementNew>();
+        float rotY = 0f;
+        if (pmNew != null && pmNew.characterModel != null)
+            rotY = pmNew.characterModel.eulerAngles.y;
 
         var ccLocal = localPlayer.GetComponent<CharacterController>();
         bool isWalkingInput = Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0;
@@ -245,6 +249,14 @@ public class ColyseusManager : MonoBehaviour
         {
             var r = kv.Value;
             r.go.transform.position = Vector3.Lerp(r.go.transform.position, r.targetPos, Time.deltaTime * positionLerp);
+            
+            // Rotate the remote player body to face the correct direction
+            r.go.transform.rotation = Quaternion.Lerp(
+                r.go.transform.rotation,
+                Quaternion.Euler(0f, r.targetRot.eulerAngles.y, 0f),
+                Time.deltaTime * rotationSlerp
+            );
+            
             Transform visualRoot = null;
 
             var r0 = r.go.transform.Find("root");
@@ -336,7 +348,7 @@ public class ColyseusManager : MonoBehaviour
 
     void LockAndHideCursor()
     {
-        Cursor.visible = false;
+        Cursor.visible = true;
         Cursor.lockState = CursorLockMode.Locked;
     }
 

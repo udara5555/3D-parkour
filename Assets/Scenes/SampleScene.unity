@@ -6414,12 +6414,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a69b41f60a7ecc4dbe8e92f2f1b857b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ColyseusManager
-  serverUrl: wss://raceclick.onrender.com/
+  serverUrl: ws://127.0.0.1:2567
   roomName: my_room
   roomCodeInput: {fileID: 871263450}
   roomCodeText: {fileID: 1649954644}
-  localPlayer: {fileID: 0}
-  remotePlayerPrefab: {fileID: 8399584905647030331, guid: 477ad7d1a19ddaf44b920cb1dc39d3ec, type: 3}
+  localPlayer: {fileID: 2136651965}
+  remotePlayerPrefab: {fileID: 1084915438505142328, guid: ccba60bc0c21d824ca838c7298ade9df, type: 3}
   sendInterval: 0.05
   positionLerp: 12
   rotationSlerp: 12
