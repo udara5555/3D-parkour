@@ -35,8 +35,8 @@ public class PlayerMovementNew : MonoBehaviour
     private int dieHash = Animator.StringToHash("Die");
 
     // Click counting during countdown
-    private int localClickCount = 0;
-    private int startClicks = 0;
+    public int localClickCount = 0;
+    public int startClicks = 0;
     private bool isAutoMoving = false;
     private float lastRecordedSpeed = 0f;
     private bool hasDiedAtEnd = false;
@@ -400,13 +400,23 @@ public class PlayerMovementNew : MonoBehaviour
         Vector3 pos = transform.position;
         float rotY = characterModel != null ? characterModel.eulerAngles.y : 0f;
         
+        bool isRunning = animator.GetBool(runHash);
         bool isWalking = animator.GetBool(walkHash);
         bool isSitting = animator.GetBool(sitHash);
         bool isInAir = !cc.isGrounded;
         
-        string animState = isSitting ? "sit" : (isInAir ? "jump" : (isWalking ? "walk" : "idle"));
+        string animState;
+        if (isSitting)
+            animState = "sit";
+        else if (isInAir)
+            animState = "jump";
+        else if (isRunning)
+            animState = "run";
+        else if (isWalking)
+            animState = "walk";
+        else
+            animState = "idle";
         
-        //Debug.Log($"Sending: pos={pos}, rot={rotY}, anim={animState}");  // Add this for debugging
         net.SendMove(pos, rotY, animState);
     }
 

@@ -120,12 +120,16 @@ public class ColyseusManager : MonoBehaviour
                 {
                     // Set animation states based on server data
                     rd.anim.SetBool("Walk", player.anim == "walk");
+                    rd.anim.SetBool("Run", player.anim == "run");
                     rd.anim.SetBool("Sit", player.anim == "sit");
                     rd.anim.SetBool("Jump", player.anim == "jump");
                     
-                    // If idle, make sure Walk is false
+                    // If idle, make sure Walk and Run are false
                     if (player.anim == "idle")
+                    {
                         rd.anim.SetBool("Walk", false);
+                        rd.anim.SetBool("Run", false);
+                    }
                 }
 
                 // Apply skin change using CharacterSwitcherNew
