@@ -442,3 +442,5 @@ MonoBehaviour:
   eggValue: 0
   lockVisual: {fileID: 0}
   label: {fileID: 0}
+  unlockSound: {fileID: 8300000, guid: dcd2ba6d20d51f146a3de27b39abc452, type: 3}
+  notEnoughWinsSound: {fileID: 8300000, guid: 8d9ff860752168b4c8853dbe36e55742, type: 3}

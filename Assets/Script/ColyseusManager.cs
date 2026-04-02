@@ -13,6 +13,7 @@ public class ColyseusManager : MonoBehaviour
     [Header("UI")]
     public TMP_InputField roomCodeInput;
     public TMP_Text roomCodeText;
+    public RoomCodeCopyButton roomCodeCopyButton; // Add this
 
     [Header("Scene refs")]
     public Transform localPlayer;
@@ -53,7 +54,20 @@ public class ColyseusManager : MonoBehaviour
         room = await client.Create<MyState>(roomName);
         Debug.Log("CREATED roomId: " + room.RoomId);
         if (roomCodeText != null)
-            roomCodeText.text = "Room ID :" + room.RoomId;
+        {
+            roomCodeText.text = "Room ID: " + room.RoomId;
+            
+            // Notify copy button script
+            if (roomCodeCopyButton != null)
+                roomCodeCopyButton.SetRoomCode(room.RoomId);
+            
+            // Try to enable text selection
+            #if UNITY_EDITOR
+            GUIUtility.systemCopyBuffer = room.RoomId;
+            Debug.Log("Room ID copied to clipboard: " + room.RoomId);
+            #endif
+        }
+        
         HookStateCallbacks();
         //LockAndHideCursor();
     }

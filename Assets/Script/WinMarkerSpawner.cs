@@ -1,5 +1,5 @@
-using UnityEngine;
 using TMPro;
+using UnityEngine;
 
 public class WinMarkerSpawner : MonoBehaviour
 {
@@ -8,6 +8,9 @@ public class WinMarkerSpawner : MonoBehaviour
 
     public float markerInterval = 50f;
     public float markerYOffset = 2f;
+
+    public AudioClip winSound;
+    private AudioSource audioSource;
 
     private float nextSpawnZ;
     private bool raceStarted = false;
@@ -19,6 +22,11 @@ public class WinMarkerSpawner : MonoBehaviour
     void Start()
     {
         net = FindAnyObjectByType<ColyseusManager>();
+        
+        // add AudioSource on this GameObject automatically
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.clip = winSound;
     }
 
     void Update()
@@ -73,6 +81,13 @@ public class WinMarkerSpawner : MonoBehaviour
     {
         winCount++;
         Debug.Log("Wins: " + winCount);
+        PlayWinSound();
+    }
+
+    public void PlayWinSound()
+    {
+        if (audioSource != null && winSound != null)
+            audioSource.Play();
     }
 
     public int GetWins()
