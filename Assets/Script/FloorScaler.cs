@@ -10,6 +10,9 @@ public class FloorScaler : MonoBehaviour
     private Vector3 initialPosition;
     private float currentScaleZ;
     private int localClickCount = 0;
+    private int frameDelayCounter = 0;
+    private const int RESET_FRAME_DELAY = 10;
+    private bool pendingReset = false;
 
     Renderer rend;
 
@@ -34,10 +37,24 @@ public class FloorScaler : MonoBehaviour
         if (net == null || !net.IsInRoom)
             return;
 
-        // Reset floor when racing phase ends
+        // Handle pending reset with frame delay
+        if (pendingReset)
+        {
+            frameDelayCounter++;
+            if (frameDelayCounter >= RESET_FRAME_DELAY)
+            {
+                ResetFloorScale();
+                pendingReset = false;
+                frameDelayCounter = 0;
+            }
+            return;
+        }
+
+        // Trigger reset when racing phase ends
         if (net.CurrentPhase != "racing")
         {
-            ResetFloorScale();
+            pendingReset = true;
+            frameDelayCounter = 0;
             return;
         }
 

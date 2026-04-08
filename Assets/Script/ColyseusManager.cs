@@ -184,7 +184,7 @@ public class ColyseusManager : MonoBehaviour
                 {
                     CountdownUI.Instance?.Hide();
                     ReturnPlayersToInitialPositions();
-                    FindAnyObjectByType<FloorScaler>()?.ResetFloorScale();
+                    //FindAnyObjectByType<FloorScaler>()?.ResetFloorScale();
                     FindAnyObjectByType<WinMarkerSpawner>()?.ResetSpawner();
                 }
             }
