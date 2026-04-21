@@ -257,6 +257,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 43e9d71b8482b074c999b9ab6b5810bd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2136651969}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 43e9d71b8482b074c999b9ab6b5810bd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2136651970}
   m_SourcePrefab: {fileID: 100100000, guid: 43e9d71b8482b074c999b9ab6b5810bd, type: 3}
 --- !u!1 &134097557
 GameObject:
@@ -6614,6 +6617,19 @@ MonoBehaviour:
   startClicksText: {fileID: 257348393}
   currentClicksText: {fileID: 1127370450}
   winCountText: {fileID: 2014351952}
+--- !u!114 &2136651970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2136651963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc751b890bca3934f8610e958533a107, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DanceManager
+  idleDurationThreshold: 8
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
