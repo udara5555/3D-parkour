@@ -137,12 +137,14 @@ public class ColyseusManager : MonoBehaviour
                     rd.anim.SetBool("Run", player.anim == "run");
                     rd.anim.SetBool("Sit", player.anim == "sit");
                     rd.anim.SetBool("Jump", player.anim == "jump");
-                    
+                    rd.anim.SetBool("Dance", player.anim == "dance");
+
                     // If idle, make sure Walk and Run are false
                     if (player.anim == "idle")
                     {
                         rd.anim.SetBool("Walk", false);
                         rd.anim.SetBool("Run", false);
+                        rd.anim.SetBool("Dance", false);
                     }
                 }
 

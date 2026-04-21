@@ -403,6 +403,7 @@ public class PlayerMovementNew : MonoBehaviour
         bool isRunning = animator.GetBool(runHash);
         bool isWalking = animator.GetBool(walkHash);
         bool isSitting = animator.GetBool(sitHash);
+        bool isDancing = animator.GetBool(Animator.StringToHash("Dance"));
         bool isInAir = !cc.isGrounded;
         
         string animState;
@@ -414,6 +415,8 @@ public class PlayerMovementNew : MonoBehaviour
             animState = "run";
         else if (isWalking)
             animState = "walk";
+        else if (isDancing)
+            animState = "dance";
         else
             animState = "idle";
         
