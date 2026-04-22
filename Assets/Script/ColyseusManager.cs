@@ -56,18 +56,18 @@ public class ColyseusManager : MonoBehaviour
         if (roomCodeText != null)
         {
             roomCodeText.text = "Room ID: " + room.RoomId;
-            
+
             // Notify copy button script
             if (roomCodeCopyButton != null)
                 roomCodeCopyButton.SetRoomCode(room.RoomId);
-            
+
             // Try to enable text selection
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             GUIUtility.systemCopyBuffer = room.RoomId;
             Debug.Log("Room ID copied to clipboard: " + room.RoomId);
-            #endif
+#endif
         }
-        
+
         HookStateCallbacks();
         //LockAndHideCursor();
     }
@@ -132,20 +132,25 @@ public class ColyseusManager : MonoBehaviour
 
                 if (rd.anim != null)
                 {
-                    // Set animation states based on server data
-                    rd.anim.SetBool("Walk", player.anim == "walk");
-                    rd.anim.SetBool("Run", player.anim == "run");
-                    rd.anim.SetBool("Sit", player.anim == "sit");
-                    rd.anim.SetBool("Jump", player.anim == "jump");
-                    rd.anim.SetBool("Dance", player.anim == "dance");
+                    // Reset all animations first
+                    rd.anim.SetBool("Walk", false);
+                    rd.anim.SetBool("Run", false);
+                    rd.anim.SetBool("Sit", false);
+                    rd.anim.SetBool("Jump", false);
+                    rd.anim.SetBool("Dance", false);
 
-                    // If idle, make sure Walk and Run are false
-                    if (player.anim == "idle")
-                    {
-                        rd.anim.SetBool("Walk", false);
-                        rd.anim.SetBool("Run", false);
-                        rd.anim.SetBool("Dance", false);
-                    }
+                    // Then set the appropriate animation based on server state
+                    if (player.anim == "walk")
+                        rd.anim.SetBool("Walk", true);
+                    else if (player.anim == "run")
+                        rd.anim.SetBool("Run", true);
+                    else if (player.anim == "sit")
+                        rd.anim.SetBool("Sit", true);
+                    else if (player.anim == "jump")
+                        rd.anim.SetBool("Jump", true);
+                    else if (player.anim == "dance")
+                        rd.anim.SetBool("Dance", true);
+                    // idle - all animations stay false
                 }
 
                 // Apply skin change using CharacterSwitcherNew
@@ -215,6 +220,7 @@ public class ColyseusManager : MonoBehaviour
 
     void ReturnPlayersToInitialPositions()
     {
+        // Reset remote players
         foreach (var rd in remotes.Values)
         {
             if (rd.go)
@@ -225,13 +231,13 @@ public class ColyseusManager : MonoBehaviour
             }
         }
 
-        if (localPlayer != null && room != null)
+        // Reset local player
+        if (localPlayer != null)
         {
-            if (room.State.players.TryGetValue(room.SessionId, out var localP))
+            var playerMovement = localPlayer.GetComponent<PlayerMovementNew>();
+            if (playerMovement != null)
             {
-                Vector3 initialPos = new Vector3(localP.x, localP.y, localP.z);
-                localPlayer.position = initialPos;
-                Debug.Log("Local player returned to initial position: " + initialPos);
+                playerMovement.ReturnToInitialPosition();
             }
         }
     }
@@ -248,7 +254,7 @@ public class ColyseusManager : MonoBehaviour
         sendTimer = 0f;
 
         Vector3 pos = localPlayer.position;
-        
+
         var pmNew = localPlayer.GetComponent<PlayerMovementNew>();
         float rotY = 0f;
         if (pmNew != null && pmNew.characterModel != null)
@@ -258,7 +264,22 @@ public class ColyseusManager : MonoBehaviour
         bool isWalkingInput = Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0;
         bool isSitting = Input.GetKey(KeyCode.C);
         bool isInAir = (ccLocal != null) ? !ccLocal.isGrounded : false;
-        string animState = isSitting ? "sit" : (isInAir ? "jump" : (isWalkingInput ? "walk" : "idle"));
+        
+        // Get the local player's animator to check for dance state
+        var localAnimator = localPlayer.GetComponent<Animator>();
+        bool isDancing = (localAnimator != null) ? localAnimator.GetBool("Dance") : false;
+        
+        string animState;
+        if (isSitting)
+            animState = "sit";
+        else if (isInAir)
+            animState = "jump";
+        else if (isWalkingInput)
+            animState = "walk";
+        else if (isDancing)
+            animState = "dance";
+        else
+            animState = "idle";
 
         room.Send("move", new Dictionary<string, object> {
             { "x", pos.x }, { "y", pos.y }, { "z", pos.z },
@@ -269,14 +290,14 @@ public class ColyseusManager : MonoBehaviour
         {
             var r = kv.Value;
             r.go.transform.position = Vector3.Lerp(r.go.transform.position, r.targetPos, Time.deltaTime * positionLerp);
-            
+
             // Rotate the remote player body to face the correct direction
             r.go.transform.rotation = Quaternion.Lerp(
                 r.go.transform.rotation,
                 Quaternion.Euler(0f, r.targetRot.eulerAngles.y, 0f),
                 Time.deltaTime * rotationSlerp
             );
-            
+
             Transform visualRoot = null;
 
             var r0 = r.go.transform.Find("root");

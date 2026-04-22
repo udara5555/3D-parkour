@@ -20,7 +20,7 @@ public class PlayerMovementNew : MonoBehaviour
     private float yVelocity = 0f;
     private bool jumpPressed = false;
     private bool sitPressed = false;
-    
+
     // Network references
     private ColyseusManager net;
     private CharacterSwitcherNew skinSwitcher;
@@ -33,6 +33,7 @@ public class PlayerMovementNew : MonoBehaviour
     private int jumpHash = Animator.StringToHash("Jump");
     private int sitHash = Animator.StringToHash("Sit");
     private int dieHash = Animator.StringToHash("Die");
+    private int danceHash = Animator.StringToHash("Dance");
 
     // Click counting during countdown
     public int localClickCount = 0;
@@ -43,13 +44,17 @@ public class PlayerMovementNew : MonoBehaviour
     private float dieAnimationTimer = 0f;
     private const float DIE_ANIMATION_DELAY = 1f;
 
+    // Initial position tracking for reset
+    private Vector3 initialPosition;
+    private bool hasStoredInitialPosition = false;
+
     void Start()
     {
         cc = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
         net = FindAnyObjectByType<ColyseusManager>();
         skinSwitcher = GetComponent<CharacterSwitcherNew>();
-        
+
         if (cc == null)
         {
             Debug.LogError("CharacterController not found! Please add a CharacterController to this object.");
@@ -68,6 +73,9 @@ public class PlayerMovementNew : MonoBehaviour
 
         // CRITICAL: Disable root motion so CharacterController handles movement
         animator.applyRootMotion = false;
+
+        // Store initial position for reset
+        StoreInitialPosition();
     }
 
     void Update()
@@ -85,13 +93,13 @@ public class PlayerMovementNew : MonoBehaviour
         if (hasDiedAtEnd && net != null && net.CurrentPhase == "waiting")
         {
             dieAnimationTimer += Time.deltaTime;
-            
+
             // Keep die animation parameter active during delay
             if (animator != null)
             {
                 animator.SetBool(dieHash, true);
             }
-            
+
             // After delay, transition to idle
             if (dieAnimationTimer >= DIE_ANIMATION_DELAY)
             {
@@ -159,7 +167,7 @@ public class PlayerMovementNew : MonoBehaviour
         HandleJump();
         HandleMovement();
         HandleSit();
-        
+
         // Send network updates
         if (net != null && net.IsInRoom)
         {
@@ -281,7 +289,7 @@ public class PlayerMovementNew : MonoBehaviour
     {
         // Jump input from keyboard or button
         bool jumpInput = Input.GetKeyDown(KeyCode.Space) || jumpPressed;
-        
+
         if (cc.isGrounded && jumpInput && !animator.GetBool(sitHash))
         {
             yVelocity = jumpForce;
@@ -289,7 +297,7 @@ public class PlayerMovementNew : MonoBehaviour
                 animator.SetTrigger(jumpHash);
             Debug.Log("Jump!");
         }
-        
+
         jumpPressed = false;
     }
 
@@ -297,7 +305,7 @@ public class PlayerMovementNew : MonoBehaviour
     {
         // Sit input from keyboard or button
         bool sitInput = Input.GetKey(KeyCode.C) || sitPressed;
-        
+
         if (animator != null)
             animator.SetBool(sitHash, sitInput);
     }
@@ -321,7 +329,7 @@ public class PlayerMovementNew : MonoBehaviour
         // Input
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
-        
+
         if (joystick != null)
         {
             h += joystick.Horizontal;
@@ -330,20 +338,20 @@ public class PlayerMovementNew : MonoBehaviour
 
         // Local input direction (for animation rotation)
         Vector3 localInput = new Vector3(h, 0f, v);
-        
+
         // Rotate character model around Y axis only to face movement direction
         if (localInput.sqrMagnitude > 0.01f && characterModel != null)
         {
             // Calculate target Y rotation angle from input direction
             float targetYAngle = Mathf.Atan2(localInput.x, localInput.z) * Mathf.Rad2Deg;
-            
+
             // Get current rotation and only modify Y
             Vector3 currentEuler = characterModel.localEulerAngles;
             float currentYAngle = currentEuler.y;
-            
+
             // Smooth rotation around Y axis only
             float smoothedYAngle = Mathf.LerpAngle(currentYAngle, targetYAngle, Time.deltaTime * 10f);
-            
+
             // Keep X and Z at their current values, only change Y
             characterModel.localRotation = Quaternion.Euler(currentEuler.x, smoothedYAngle, currentEuler.z);
         }
@@ -396,16 +404,16 @@ public class PlayerMovementNew : MonoBehaviour
     void SendNetworkUpdate()
     {
         if (net == null) return;
-        
+
         Vector3 pos = transform.position;
         float rotY = characterModel != null ? characterModel.eulerAngles.y : 0f;
-        
+
         bool isRunning = animator.GetBool(runHash);
         bool isWalking = animator.GetBool(walkHash);
         bool isSitting = animator.GetBool(sitHash);
-        bool isDancing = animator.GetBool(Animator.StringToHash("Dance"));
+        bool isDancing = animator.GetBool(danceHash);
         bool isInAir = !cc.isGrounded;
-        
+
         string animState;
         if (isSitting)
             animState = "sit";
@@ -419,7 +427,7 @@ public class PlayerMovementNew : MonoBehaviour
             animState = "dance";
         else
             animState = "idle";
-        
+
         net.SendMove(pos, rotY, animState);
     }
 
@@ -436,6 +444,25 @@ public class PlayerMovementNew : MonoBehaviour
         }
 
         return best;
+    }
+
+    void StoreInitialPosition()
+    {
+        initialPosition = transform.position;
+        hasStoredInitialPosition = true;
+        Debug.Log("Local player initial position stored: " + initialPosition);
+    }
+
+    public void ReturnToInitialPosition()
+    {
+        if (!hasStoredInitialPosition)
+        {
+            Debug.LogWarning("Initial position not yet stored!");
+            return;
+        }
+
+        transform.position = initialPosition;
+        Debug.Log("Local player returned to initial position: " + initialPosition);
     }
 
     // Call this method from Jump button
