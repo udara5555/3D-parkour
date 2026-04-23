@@ -165,6 +165,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 43e9d71b8482b074c999b9ab6b5810bd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 221664167593574977}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 43e9d71b8482b074c999b9ab6b5810bd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5658647090052933167}
   m_SourcePrefab: {fileID: 100100000, guid: 43e9d71b8482b074c999b9ab6b5810bd, type: 3}
 --- !u!4 &307850591023919746 stripped
 Transform:
@@ -241,6 +244,8 @@ MonoBehaviour:
   gravity: -9.8
   joystick: {fileID: 0}
   characterModel: {fileID: 5006320371271533208}
+  localClickCount: 0
+  startClicks: 0
 --- !u!114 &8917823107894005333
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -272,6 +277,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ClickUI
   startClicksText: {fileID: 0}
   currentClicksText: {fileID: 0}
+  winCountText: {fileID: 0}
+--- !u!136 &5658647090052933167
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1084915438505142328}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 1.36
+  m_Height: 3.27
+  m_Direction: 1
+  m_Center: {x: 0, y: 1.59, z: 0}
 --- !u!4 &5006320371271533208 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4128383740851021839, guid: 43e9d71b8482b074c999b9ab6b5810bd, type: 3}

@@ -11,7 +11,7 @@ public class FloorScaler : MonoBehaviour
     private float currentScaleZ;
     private int localClickCount = 0;
     private int frameDelayCounter = 0;
-    private const int RESET_FRAME_DELAY = 10;
+    private const int RESET_FRAME_DELAY = 120;
     private bool pendingReset = false;
 
     Renderer rend;
